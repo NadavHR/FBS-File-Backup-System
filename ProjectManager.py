@@ -87,14 +87,12 @@ class ProjectManager:
         return resp
 
     @staticmethod
-    def update_project_permissions(user: str, project: Project, access: bool) -> Response:
-        # TODO: make sure the function calling this function in the user manager makes sure the user requesting the
-        #  change is the same as the owner of the project
+    def update_project_permissions(user: str, project: Project, write: bool) -> Response:
         """
-        updates the permissions of a user
+        updates the permissions of a user MAKE SURE WHO EVER SUBMITTED THE REQUEST IS QUALIFIED TO DO IT!!!
         :param user: the user who's permissions we want to update
         :param project: the project whos permissions we want to update
-        :param access: the access we want to grant (True for write, False for readonly)
+        :param write: the access we want to grant (True for write, False for readonly)
         :return: the response to the request
         """
         resp = Response()
@@ -102,4 +100,18 @@ class ProjectManager:
         if not project.exists():
             resp.response_message = "the project does not exist"
             return resp
-        # if
+
+        # deletes permissions for users who no longer exist
+        perms = project.list_permission()
+        for p in perms:
+            if not ProjectManager.is_user(p[0]):
+                project.delete_permission(p[0])
+
+        if len(project.list_permission()) == ProjectManager.PROJECT_SHARING_LIMIT:
+            resp.response_message = "can not share project with any more users"
+            return resp
+
+        project.give_permissions(user, write)
+        resp.response_message(f"successfully granted access to user {user}")
+        return resp
+
