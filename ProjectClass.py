@@ -20,7 +20,7 @@ class Project:
     # to access commit data {path_to_commit}\{COMMIT_DATA}
     COMMIT_NUMBER_FILE = "n"  # a file that only contains the commit number
     # to access commit number {path_to_commit}\{COMMIT_NUMBER_FILE}
-
+    COMMIT_LIMIT = 50  # commit numbers represented in bytes bc they are very small
 
     def __init__(self, user_name: str, project_name: str):
         self.user_name = user_name
@@ -57,13 +57,15 @@ class Project:
         for path in os.listdir(dir_path):
             # check if current path is a file
             if not os.path.isfile(os.path.join(dir_path, path)):
-                perms.append((path, os.path.isfile(os.path.join(dir_path, f"{path}\\{Project.WRITE_PERMISSION_FILE_NAME}"))))
+                perms.append(
+                    (path, os.path.isfile(os.path.join(dir_path, f"{path}\\{Project.WRITE_PERMISSION_FILE_NAME}"))))
 
         return perms
 
     def give_permissions(self, user, write):
         """
-        gives permissions to a user DOES NOT MAKE SURE PROJECT PERMISSIONS DON'T GO ABOVE SHARING LIMIT
+        gives permissions to a user DOES NOT MAKE SURE PROJECT PERMISSIONS DON'T GO ABOVE SHARING LIMIT, OR THAT THE
+        USER BEING GIVEN PERMISSIONS ISN'T THE OWNER
         :param user: the name of the user to give permissions to
         :param write: True for write access, False for readonly
         """
@@ -97,14 +99,55 @@ class Project:
 
     def commit(self, data: bytes) -> bool:
         """
-        commits the data as a new commit, DOES NOT MAKE SURE USER DOES NOT EXCEED COMMITS LIMIT
+        commits the data as a new commit, DOES NOT MAKE SURE DATA DOES NOT EXCEED SIZE LIMIT
         :param data: the data we want to commit as bytes
-        :return: True if successfully added a new commit and False if the project does not exist
+        :return: True if successfully added a new commit and False if the project does not exist or exceeds commit limit
         """
         if not self.exists():
             return False
-        # TODO: finish this
 
+        latest = self.path_to_latest_commit()
+        num_file_path = f"{latest}\\{Project.COMMIT_NUMBER_FILE}"
+        data_file_path = f"{latest}\\{Project.COMMIT_DATA}"
+        num = self.count_commits()
+        if num == 0:  # case of first commit
+            f = open(num_file_path, "wb")
+            f.write("\x00")
+            f.close()
+            f = open(data_file_path, "wb")
+            f.write(data)
+            f.close()
+        elif num == Project.COMMIT_LIMIT:  # project exceeds commit limit
+            return False
+        else:
+            temp_folder = f"{latest}\\temp"
+            os.mkdir(temp_folder)
+            shutil.move(num_file_path, temp_folder)
+            shutil.move(data_file_path, temp_folder)
+            if num > 1:  # only move the path to the next commit if it exists
+                shutil.move(f"{latest}\\{Project.COMMIT_DIR}", temp_folder)
+            os.rename(temp_folder, f"{latest}\\{Project.COMMIT_DIR}")
 
+            f = open(num_file_path, "wb")
+            f.write(num.to_bytes(1, "big"))
+            f.close()
+            f = open(data_file_path, "wb")
+            f.write(data)
+            f.close()
 
+        return True
 
+    def count_commits(self) -> int:
+        """
+        checks how many commits the project has
+        :return: the amount of commits the project has
+        """
+        latest = self.path_to_latest_commit()
+        num_file_path = f"{latest}\\{Project.COMMIT_NUMBER_FILE}"
+        if os.path.isfile(num_file_path):
+            f = open(num_file_path, "rb")
+            num = int.from_bytes(f.read(), "big")
+            f.close()
+            return num + 1
+        else:
+            return 0
