@@ -54,11 +54,14 @@ class Project:
         """
         dir_path = self.path_to_permissions()
         perms = []
-        for path in os.listdir(dir_path):
-            # check if current path is a file
-            if not os.path.isfile(os.path.join(dir_path, path)):
-                perms.append(
-                    (path, os.path.isfile(os.path.join(dir_path, f"{path}\\{Project.WRITE_PERMISSION_FILE_NAME}"))))
+        if os.path.exists(dir_path):
+            for path in os.listdir(dir_path):
+                # check if current path is a file
+                if not os.path.isfile(os.path.join(dir_path, path)):
+                    perms.append(
+                        (path, os.path.isfile(os.path.join(dir_path, f"{path}\\{Project.WRITE_PERMISSION_FILE_NAME}"))))
+        else:  # permissions path doesnt exist
+            os.mkdir(dir_path)
 
         return perms
 
@@ -71,7 +74,7 @@ class Project:
         """
         path_to_user_perms = f"{self.path_to_permissions()}\\{user}"
         if write:
-            f = open(f"{path_to_user_perms}\\{Project.WRITE_PERMISSION_FILE_NAME}", "wb")
+            f = open(f"{path_to_user_perms}\\{Project.WRITE_PERMISSION_FILE_NAME}", "wb+")
             f.close()
         else:
             if not os.path.isdir(path_to_user_perms):
@@ -111,10 +114,11 @@ class Project:
         data_file_path = f"{latest}\\{Project.COMMIT_DATA}"
         num = self.count_commits()
         if num == 0:  # case of first commit
-            f = open(num_file_path, "wb")
-            f.write("\x00")
+            os.mkdir(latest)
+            f = open(num_file_path, "wb+")
+            f.write(b"\x00")
             f.close()
-            f = open(data_file_path, "wb")
+            f = open(data_file_path, "wb+")
             f.write(data)
             f.close()
         elif num == Project.COMMIT_LIMIT:  # project exceeds commit limit
@@ -128,10 +132,10 @@ class Project:
                 shutil.move(f"{latest}\\{Project.COMMIT_DIR}", temp_folder)
             os.rename(temp_folder, f"{latest}\\{Project.COMMIT_DIR}")
 
-            f = open(num_file_path, "wb")
+            f = open(num_file_path, "wb+")
             f.write(num.to_bytes(1, "big"))
             f.close()
-            f = open(data_file_path, "wb")
+            f = open(data_file_path, "wb+")
             f.write(data)
             f.close()
 
@@ -151,3 +155,16 @@ class Project:
             return num + 1
         else:
             return 0
+
+
+    def delete(self) -> bool:
+        """
+        deletes this project, ONLY USE IF THE DELETING USER HAS PERMISSIONS TO DELETE
+        :return: True if the project was deleted False if it didnt exist
+        """
+        if self.exists():
+            shutil.rmtree(self.to_path())
+            return True
+        else:
+            return False
+

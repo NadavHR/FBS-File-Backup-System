@@ -27,6 +27,7 @@ class ProjectManager:
     S_PROJECT_CREATED = Response(success=True, response_message="successfully created project")
     S_ACCESS_GRANTED = Response(success=True, response_message=f"successfully modified access to user")
     S_COMMIT_SUCCESSFUL = Response(success=True, response_message="successfully created new commit")
+    S_PROJECT_DELETED = Response(success=True, response_message="successfully deleted project")
 
     def __init__(self):
         pass
@@ -115,7 +116,7 @@ class ProjectManager:
         return ProjectManager.S_PROJECT_CREATED
 
     @staticmethod
-    def update_project_permissions(user: str, project: Project, write: bool) -> Response:
+    def update_project_permissions(user: str, project: Project, write: bool = None) -> Response:
         """
         updates the permissions of a user MAKE SURE WHO EVER SUBMITTED THE REQUEST IS QUALIFIED TO DO IT!!!
         :param user: the user who's permissions we want to update
@@ -172,3 +173,16 @@ class ProjectManager:
         elif not project.commit(data):
             return ProjectManager.E_UNKNOWN_ERROR
         return ProjectManager.S_COMMIT_SUCCESSFUL
+
+
+    @staticmethod
+    def delete_project(project: Project):
+        """
+        deletes a project, ONLY USE IF THE USER WHO ASKS FOR DELETION IS THE OWNER
+        :param project: the project we want to delete
+        :return: Response object
+        """
+        if project.delete():
+            return ProjectManager.S_PROJECT_DELETED
+        else:
+            return ProjectManager.E_PROJECT_DOESNT_EXIST

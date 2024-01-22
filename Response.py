@@ -6,3 +6,6 @@ class Response:
 
     def __eq__(self, other):
         return (not (self.success ^ other.success)) and (self.response_message == other.response_message)
+
+    def __str__(self):
+        return f"success: {self.success}  response: {self.response_message}"
