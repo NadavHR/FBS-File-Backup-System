@@ -1,33 +1,11 @@
 import os
+
+import constants
 from ProjectClass import Project
 from Response import Response
+from Commit import Commit
 
-
-class ProjectManager:
-    USER_PROJECT_LIMIT = 8
-    PROJECT_SHARING_LIMIT = 32
-    MAX_COMMIT_LENGTH = 64000000  # 64mb
-
-    # possible errors:
-    E_USER_DOESNT_EXIST = Response(success=False, response_message="user does not exist")
-    E_PROJECT_DOESNT_EXIST = Response(success=False, response_message="project does not exist")
-    E_BAD_PERMISSIONS = Response(success=False, response_message="you don't have the right permissions to this project")
-    E_BAD_COMMIT_SIZE = Response(success=False, response_message="commit size too big")
-    E_COMMIT_LIMIT_REACHED = Response(success=False, response_message="can not add any more commits to this project")
-    E_UNKNOWN_ERROR = Response(success=False, response_message="unknown error has occurred")
-    E_PROJECT_ALREADY_EXISTS = Response(success=False, response_message="project already exists")
-    E_PROJECT_LIMIT_REACHED = Response(success=False, response_message="user at project_limit")
-    E_PROJECT_SHARE_LIMIT_REACHED = Response(success=False,
-                                             response_message="can not share project with any more users")
-    E_CANT_CHANGE_OWNER_ACCESS = Response(success=False, response_message="can't modify the owners access")
-    E_CANT_DELETE_NON_EXISTENT_ACCESS = Response(success=False, response_message="can't delete access to a user who had"
-                                                                                 " no access to begin with")
-
-    # possible success messages
-    S_PROJECT_CREATED = Response(success=True, response_message="successfully created project")
-    S_ACCESS_GRANTED = Response(success=True, response_message=f"successfully modified access to user")
-    S_COMMIT_SUCCESSFUL = Response(success=True, response_message="successfully created new commit")
-    S_PROJECT_DELETED = Response(success=True, response_message="successfully deleted project")
+class ProjectManager(constants.Constants):
 
     def __init__(self):
         pass
@@ -112,7 +90,9 @@ class ProjectManager:
         if project.exists():  # checks if the project exists
             return ProjectManager.E_PROJECT_ALREADY_EXISTS
 
-        os.mkdir(project.to_path())
+        if not project.create():  # failed for some reason were not sure of
+            return ProjectManager.E_UNKNOWN_ERROR
+
         return ProjectManager.S_PROJECT_CREATED
 
     @staticmethod
@@ -152,28 +132,26 @@ class ProjectManager:
         return ProjectManager.S_ACCESS_GRANTED
 
     @staticmethod
-    def commit_to(user: str, project: Project, data: bytes) -> Response:
+    def commit_to(project: Project, commit: Commit) -> Response:
         """
         this method commits a new commit to a given project (if possible)
-        :param user: the user trying to make the commit
         :param project: the project being commited to
-        :param data: the data we are trying to commit to the project
+        :param commit: the commit we are trying to commit to the project
         :return: a Response object with the fitting response message
         """
-        if not ProjectManager.is_user(user):
+        if not ProjectManager.is_user(commit.user):
             return ProjectManager.E_USER_DOESNT_EXIST
         elif not project.exists():
             return ProjectManager.E_PROJECT_DOESNT_EXIST
-        elif not ProjectManager.authenticate_permissions(user=user, target_project=project, write=True):
+        elif not ProjectManager.authenticate_permissions(user=commit.user, target_project=project, write=True):
             return ProjectManager.E_BAD_PERMISSIONS
-        elif len(data) > ProjectManager.MAX_COMMIT_LENGTH:
+        elif len(commit.data) > ProjectManager.COMMIT_SIZE_LIMIT:
             return ProjectManager.E_BAD_COMMIT_SIZE
         elif project.count_commits() > Project.COMMIT_LIMIT:
             return ProjectManager.E_COMMIT_LIMIT_REACHED
-        elif not project.commit(data):
+        elif not commit.commit():
             return ProjectManager.E_UNKNOWN_ERROR
         return ProjectManager.S_COMMIT_SUCCESSFUL
-
 
     @staticmethod
     def delete_project(project: Project):

@@ -1,30 +1,19 @@
+import datetime
+import json
 import os
 import shutil
 
+import constants
 
-class Project:
-    USERS_DIR = "users"
-    PROJECTS_DIR = "projects"
-    # to access a project {USERS_DIR}\{user_name}\{PROJECTS_DIR}\{project_name}
-    USER_SHARED_DIR = "shared"  # this dir contains a folder for every user who shares a project with this user and a
-    # file named after the project for every project that user shares with the current user
-    # to access shared projects {USERS_DIR}\{user_name}\{USER_SHARED_DIR}\{checked_user}\{checked_project}
-    PROJECT_PERMISSIONS_DIR = "permissions"  # this dir contains a folder for every user with permissions and the folder
-    # is either empty (meaning readonly permissions) or has an empty file meaning write permissions
-    # to access permissions {path_to_project}\{PROJECT_PERMISSIONS_DIR}\{user_name}
-    WRITE_PERMISSION_FILE_NAME = "W"
-    # a user with write access {path_to_project}\{PROJECT_PERMISSIONS_DIR}\{user_name}\{WRITE_PERMISSION_FILE_NAME}
-    COMMIT_DIR = "last_commit"  # every commit has a folder named as such so it points to the last commit
-    # to access commits {path_to_project}\({COMMIT_DIR}\*n) with n being the number of commits you want to go back
-    COMMIT_DATA = "data"
-    # to access commit data {path_to_commit}\{COMMIT_DATA}
-    COMMIT_NUMBER_FILE = "n"  # a file that only contains the commit number
-    # to access commit number {path_to_commit}\{COMMIT_NUMBER_FILE}
-    COMMIT_LIMIT = 50  # commit numbers represented in bytes bc they are very small
 
-    def __init__(self, user_name: str, project_name: str):
+class Project(constants.Constants):
+
+    def __init__(self, user_name: str, project_name: str, project_description: str = "",
+                 creation_time: datetime.datetime = datetime.datetime.now()):
         self.user_name = user_name
         self.project_name = project_name
+        self.project_description = project_description
+        self.creation_time = creation_time
 
     def path_to_permissions(self) -> str:
         """
@@ -100,9 +89,20 @@ class Project:
         """
         return f"{self.to_path()}\\{Project.COMMIT_DIR}"
 
+    def path_to_n_commit(self, n: int) -> str:
+        """
+        gives you the path to the n'th commit
+        :param n: the number of the commit you want to get
+        :return: the path to the n'th commit in the project
+        """
+        if (n >= self.count_commits()) or (n < 0):
+            raise Exception("can not access a negative or non existent commit")
+        return f"{self.path_to_latest_commit()}\\{Project.COMMIT_DIR * (self.count_commits() - n - 1)}"
+
     def commit(self, data: bytes) -> bool:
         """
         commits the data as a new commit, DOES NOT MAKE SURE DATA DOES NOT EXCEED SIZE LIMIT
+        DON'T USE THIS FUNCTION DIRECTLY, use the ProjectManager or maybe in specific cases the Commit class
         :param data: the data we want to commit as bytes
         :return: True if successfully added a new commit and False if the project does not exist or exceeds commit limit
         """
@@ -111,7 +111,8 @@ class Project:
 
         latest = self.path_to_latest_commit()
         num_file_path = f"{latest}\\{Project.COMMIT_NUMBER_FILE}"
-        data_file_path = f"{latest}\\{Project.COMMIT_DATA}"
+        data_file_path = f"{latest}\\{Project.COMMIT_DATA_FILE}"
+        metadata_file_path = f"{latest}\\{Project.COMMIT_METADATA_FILE}"
         num = self.count_commits()
         if num == 0:  # case of first commit
             os.mkdir(latest)
@@ -128,6 +129,7 @@ class Project:
             os.mkdir(temp_folder)
             shutil.move(num_file_path, temp_folder)
             shutil.move(data_file_path, temp_folder)
+            shutil.move(metadata_file_path, temp_folder)
             if num > 1:  # only move the path to the next commit if it exists
                 shutil.move(f"{latest}\\{Project.COMMIT_DIR}", temp_folder)
             os.rename(temp_folder, f"{latest}\\{Project.COMMIT_DIR}")
@@ -140,6 +142,15 @@ class Project:
             f.close()
 
         return True
+
+    def delete_commit(self, commit_number: int) -> bool:
+        """
+        deletes a commit if it exists ONLY USE AFTER MAKING SURE THE USER REQUESTING DELETION IS AUTHORIZED TO DO SO
+        :param commit_number: the number of the commit we want to delete
+        :return: true if the commit was successfully deleted false if it didn't exist
+        """
+
+        # TODO: finish this
 
     def count_commits(self) -> int:
         """
@@ -156,7 +167,6 @@ class Project:
         else:
             return 0
 
-
     def delete(self) -> bool:
         """
         deletes this project, ONLY USE IF THE DELETING USER HAS PERMISSIONS TO DELETE
@@ -168,3 +178,29 @@ class Project:
         else:
             return False
 
+    def create(self) -> bool:
+        """
+        attempts to create the project if it doesnt already exist or fails the size limits,
+        DOES NOT MAKE SURE THE PROJECT IS LEGAL IN ANY WAY OTHER THAN SIZE LIMITS, DO NOT USE THIS FUNCTION DIRECTLY,
+        USE ProjectManager
+        :return: true if successfully created the project, else false
+        """
+        if self.exists():  # project already exists
+            return False
+        if len(self.project_description) > Project.PROJECT_DESCRIPTION_SIZE_LIMIT:  # project description too long
+            return False
+        if len(self.project_name) > Project.PROJECT_NAME_SIZE_LIMIT:  # project name too long
+            return False
+
+        path_to_project = self.to_path()
+        os.mkdir(path_to_project)
+        self.creation_time = datetime.datetime.now()
+        f = open(f"{path_to_project}\\{Project.PROJECT_METADATA_FILE}", "w+")
+        f.write(json.dumps({Project.PROJECT_DESCRIPTION_FIELD: self.project_description,
+                            Project.PROJECT_DATE_FIELD: self.creation_time}, default=str))
+        f.close()
+
+        return True
+
+    def __eq__(self, other):
+        return (self.project_name == other.project_name) and (self.user_name == other.user_name)
