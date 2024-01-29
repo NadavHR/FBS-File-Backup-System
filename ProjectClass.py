@@ -97,7 +97,8 @@ class Project(constants.Constants):
         """
         if (n >= self.count_commits()) or (n < 0):
             raise Exception("can not access a negative or non existent commit")
-        return f"{self.path_to_latest_commit()}\\{Project.COMMIT_DIR * (self.count_commits() - n - 1)}"
+        last = f"\\{Project.COMMIT_DIR}"
+        return f"{self.path_to_latest_commit()}{ last * (self.count_commits() - n - 1)}"
 
     def commit(self, data: bytes) -> bool:
         """

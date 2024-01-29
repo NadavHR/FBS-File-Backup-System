@@ -119,12 +119,12 @@ class Commit(constants.Constants):
 
         def decrease_all_by_1(index: int):
             """decreases all of the commits after n (including) by 1"""
-            for i in range(self.project.count_commits() - 1 - index):
-                num_file_path = self.project.path_to_n_commit(index + i)
+            for i in range(self.project.count_commits() - index):
+                num_file_path = f"{self.project.path_to_n_commit(index + i)}\\{Commit.COMMIT_NUMBER_FILE}"
                 f = open(num_file_path, "rb")
                 num = int.from_bytes(f.read(), "big")
                 f.close()
-                f = open (num_file_path, "wb+")
+                f = open(num_file_path, "wb+")
                 f.write((num - 1).to_bytes(1, "big"))
                 f.close()
 
@@ -138,10 +138,11 @@ class Commit(constants.Constants):
                 path_to_prev_commit = self.project.path_to_n_commit(self.commit_number - 1)
                 temp_folder = f"{path_to_parent_commit}\\temp"
                 os.mkdir(temp_folder)
-                shutil.move(path_to_prev_commit, temp_folder)
+                for path in os.listdir(path_to_prev_commit):
+                    shutil.move(f"{path_to_prev_commit}\\{path}", temp_folder)
                 shutil.rmtree(path_to_commit)
                 os.rename(temp_folder, path_to_commit)
-
+                decrease_all_by_1(n)
 
             else:
                 pass
