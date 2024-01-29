@@ -134,7 +134,7 @@ class Commit(constants.Constants):
         else:
             n = self.commit_number + 1
             path_to_parent_commit = self.project.path_to_n_commit(n)
-            if n > 0:  # case of not first commit
+            if n > 1:  # case of not first commit
                 path_to_prev_commit = self.project.path_to_n_commit(self.commit_number - 1)
                 temp_folder = f"{path_to_parent_commit}\\temp"
                 os.mkdir(temp_folder)
@@ -143,9 +143,9 @@ class Commit(constants.Constants):
                 shutil.rmtree(path_to_commit)
                 os.rename(temp_folder, path_to_commit)
                 decrease_all_by_1(n)
-
-            else:
-                pass
+            else:  # case of first commit
+                shutil.rmtree(f"{path_to_parent_commit}\\{Commit.COMMIT_DIR}")
+                decrease_all_by_1(n)
         return True
         # TODO: finish this
 

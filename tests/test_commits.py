@@ -20,7 +20,20 @@ class TestCommits(unittest.TestCase):
 
         self.assertTrue((first or second) and not (first and second) and first)  # only true if first=True second=False
 
-    def test_deletion(self):
+    def test_deletion_middle(self):
+        project = Project("test_user", "test_project")
+        ProjectManager.delete_project(project)
+        ProjectManager.add_project(project)
+        for i in range(5):
+            commit = Commit.new_commit(project=project, user="test_user", data=b"Hello, World", commit_name="hi",
+                                       commit_message="hi")
+            commit.commit()
+        n = project.count_commits()
+        c = Commit.from_commit_number(project=project, commit_number=1)
+        s = c.delete()
+        self.assertTrue(s and (n == project.count_commits() + 1))
+
+    def test_deletion_start(self):
         project = Project("test_user", "test_project")
         ProjectManager.delete_project(project)
         ProjectManager.add_project(project)
@@ -29,9 +42,10 @@ class TestCommits(unittest.TestCase):
                                        commit_message="hi")
             commit.commit()
         n = project.count_commits()
-        c = Commit.from_commit_number(project=project, commit_number=1)
+        c = Commit.from_commit_number(project=project, commit_number=0)
         s = c.delete()
         self.assertTrue(s and (n == project.count_commits() + 1))
+
 
 def main():
     unittest.main()
