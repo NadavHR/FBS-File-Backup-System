@@ -46,6 +46,19 @@ class TestCommits(unittest.TestCase):
         s = c.delete()
         self.assertTrue(s and (n == project.count_commits() + 1))
 
+    def test_deletion_end(self):
+        project = Project("test_user", "test_project")
+        ProjectManager.delete_project(project)
+        ProjectManager.add_project(project)
+        for i in range(3):
+            commit = Commit.new_commit(project=project, user="test_user", data=b"Hello, World", commit_name="hi",
+                                       commit_message="hi")
+            commit.commit()
+        n = project.count_commits()
+        c = Commit.from_commit_number(project=project, commit_number=2)
+        s = c.delete()
+        self.assertTrue(s and (n == project.count_commits() + 1))
+
 
 def main():
     unittest.main()

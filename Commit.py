@@ -129,26 +129,25 @@ class Commit(constants.Constants):
                 f.close()
 
         path_to_commit = self.project.path_to_n_commit(self.commit_number)
-        if self.commit_number == (self.project.count_commits() - 1):  # case of latest commit
-            pass
+        n = self.commit_number + 1
+        if n == self.project.count_commits():  # case of latest commit
+            path_to_parent = self.project.to_path()
         else:
-            n = self.commit_number + 1
-            path_to_parent_commit = self.project.path_to_n_commit(n)
-            if n > 1:  # case of not first commit
-                path_to_prev_commit = self.project.path_to_n_commit(self.commit_number - 1)
-                temp_folder = f"{path_to_parent_commit}\\temp"
-                os.mkdir(temp_folder)
-                for path in os.listdir(path_to_prev_commit):
-                    shutil.move(f"{path_to_prev_commit}\\{path}", temp_folder)
-                shutil.rmtree(path_to_commit)
-                os.rename(temp_folder, path_to_commit)
-                decrease_all_by_1(n)
-            else:  # case of first commit
-                shutil.rmtree(f"{path_to_parent_commit}\\{Commit.COMMIT_DIR}")
-                decrease_all_by_1(n)
+            path_to_parent = self.project.path_to_n_commit(n)
+        if n > 1:  # case of not first commit
+            path_to_prev_commit = self.project.path_to_n_commit(self.commit_number - 1)
+            temp_folder = f"{path_to_parent}\\temp"
+            os.mkdir(temp_folder)
+            for path in os.listdir(path_to_prev_commit):
+                shutil.move(f"{path_to_prev_commit}\\{path}", temp_folder)
+            shutil.rmtree(path_to_commit)
+            os.rename(temp_folder, path_to_commit)
+            decrease_all_by_1(n)
+        else:  # case of first commit
+            shutil.rmtree(f"{path_to_parent}\\{Commit.COMMIT_DIR}")
+            decrease_all_by_1(n)
         return True
         # TODO: finish this
-
 
     def __eq__(self, other):
         return (self.project == other.project) and \
