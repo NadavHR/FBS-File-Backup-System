@@ -21,16 +21,20 @@ class Constants:
     E_CANT_CHANGE_OWNER_ACCESS = Response(success=False, response_message="can't modify the owners access")
     E_CANT_DELETE_NON_EXISTENT_ACCESS = Response(success=False, response_message="can't delete access to a user who had"
                                                                                  " no access to begin with")
+    E_COMMIT_DOESNT_EXIST = Response(success=False, response_message="commit does not exists")
 
     # possible success messages
     S_PROJECT_CREATED = Response(success=True, response_message="successfully created project")
     S_ACCESS_GRANTED = Response(success=True, response_message=f"successfully modified access to user")
     S_COMMIT_SUCCESSFUL = Response(success=True, response_message="successfully created new commit")
     S_PROJECT_DELETED = Response(success=True, response_message="successfully deleted project")
+    S_COMMIT_DELETED = Response(success=True, response_message="successfully deleted commit")
 
     USERS_DIR = "users"
     PROJECTS_DIR = "projects"
     # to access a project {USERS_DIR}\{user_name}\{PROJECTS_DIR}\{project_name}
+    SHARED_PROJECTS_DIR = "shared"  # TODO: implement this to all users
+    # is stored {USERS_DIR}\{user_name}\{SHARED_PROJECTS_DIR}\{user_name}\{project_name}
     USER_SHARED_DIR = "shared"  # this dir contains a folder for every user who shares a project with this user and a
     # file named after the project for every project that user shares with the current user
     # to access shared projects {USERS_DIR}\{user_name}\{USER_SHARED_DIR}\{checked_user}\{checked_project}

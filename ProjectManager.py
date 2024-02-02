@@ -147,8 +147,10 @@ class ProjectManager(constants.Constants):
             return ProjectManager.E_BAD_PERMISSIONS
         elif len(commit.data) > ProjectManager.COMMIT_SIZE_LIMIT:
             return ProjectManager.E_BAD_COMMIT_SIZE
-        elif project.count_commits() > Project.COMMIT_LIMIT:
+        elif project.count_commits() >= Project.COMMIT_LIMIT:
             return ProjectManager.E_COMMIT_LIMIT_REACHED
+        elif project != commit.project:
+            return ProjectManager.E_UNKNOWN_ERROR
         elif not commit.commit():
             return ProjectManager.E_UNKNOWN_ERROR
         return ProjectManager.S_COMMIT_SUCCESSFUL
@@ -164,3 +166,19 @@ class ProjectManager(constants.Constants):
             return ProjectManager.S_PROJECT_DELETED
         else:
             return ProjectManager.E_PROJECT_DOESNT_EXIST
+
+    @staticmethod
+    def delete_commit(commit: Commit):
+        """
+        deletes a commit, ONLY USE IF THE UER ASKING FOR DELETION IS THE OWNER
+        :param commit: the commit to delete
+        :return: a Response object with the fitting response
+        """
+        if not commit.project.exists():
+            return ProjectManager.E_PROJECT_DOESNT_EXIST
+        if not commit.exists():
+            return ProjectManager.E_COMMIT_DOESNT_EXIST
+        if not commit.delete():
+            return ProjectManager.E_UNKNOWN_ERROR
+
+        return ProjectManager.S_COMMIT_DELETED

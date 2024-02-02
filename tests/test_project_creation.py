@@ -38,6 +38,23 @@ class TestProjectCreation(unittest.TestCase):
         self.assertEqual(ProjectManager.delete_project(project),
                          ProjectManager.S_PROJECT_DELETED)
 
+    def test_project_listing(self):
+        try:
+            os.makedirs("users\\listing_check\\projects")
+        except:
+            pass
+        for i in range(3):
+            project = Project(user_name="listing_check", project_name=f"project_{i}")
+            ProjectManager.add_project(project)
+        r = ProjectManager.get_user_projects("listing_check")
+        self.assertTrue(r.success)
+        for i in range(3):
+            self.assertTrue(f"project_{i}" in r.response_message)
+
+    def test_project_listing_bad_user(self):
+        self.assertEqual(ProjectManager.get_user_projects("bad user"), ProjectManager.E_USER_DOESNT_EXIST)
+
+
 
 def main():
     try:
