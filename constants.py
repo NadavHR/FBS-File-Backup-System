@@ -30,14 +30,25 @@ class Constants:
     S_PROJECT_DELETED = Response(success=True, response_message="successfully deleted project")
     S_COMMIT_DELETED = Response(success=True, response_message="successfully deleted commit")
 
+    RESP_SELF_PROJECTS_FIELD = "projects"  # when asked for listing all of a users projects this is the user's
+    # own projects field
+    RESP_SHARED_PROJECTS_FIELD = "shared"  # when asked for listing all of a users projects this is the user's
+    # shared projects field
+
     USERS_DIR = "users"
     PROJECTS_DIR = "projects"
     # to access a project {USERS_DIR}\{user_name}\{PROJECTS_DIR}\{project_name}
-    SHARED_PROJECTS_DIR = "shared"  # TODO: implement this to all users
-    # is stored {USERS_DIR}\{user_name}\{SHARED_PROJECTS_DIR}\{user_name}\{project_name}
+
+    PROJECT_SHARED_DIR = "shared"
     USER_SHARED_DIR = "shared"  # this dir contains a folder for every user who shares a project with this user and a
     # file named after the project for every project that user shares with the current user
-    # to access shared projects {USERS_DIR}\{user_name}\{USER_SHARED_DIR}\{checked_user}\{checked_project}
+    # is stored {USERS_DIR}\{user_name}\{SHARED_PROJECTS_DIR}\{user_name}\{project_name}
+    USER_SHARED_PROJECT_WRITE = True
+    USER_SHARED_PROJECT_READONLY = False
+    # to access shared projects {USERS_DIR}\{user_name}\{USER_SHARED_DIR}\{checked_user}\{checked_project_name}
+    # the dir {USERS_DIR}\{user_name}\{USER_SHARED_DIR}\{checked_user} contains a file for every project that user
+    # shares with this user with the file containing 1 for write perms and 0 for read only perms
+    # DON'T EVER VERIFY ACCESS THROUGH HERE! ONLY VERIFY ACCESS THROUGH THE ORIGINAL USER
     PROJECT_PERMISSIONS_DIR = "permissions"  # this dir contains a folder for every user with permissions and the folder
     # is either empty (meaning readonly permissions) or has an empty file meaning write permissions
     # to access permissions {path_to_project}\{PROJECT_PERMISSIONS_DIR}\{user_name}

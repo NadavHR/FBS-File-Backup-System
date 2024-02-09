@@ -55,7 +55,6 @@ class TestProjectCreation(unittest.TestCase):
         self.assertEqual(ProjectManager.get_user_projects("bad user"), ProjectManager.E_USER_DOESNT_EXIST)
 
 
-
 def main():
     try:
         os.makedirs("users\\test_user\\projects")

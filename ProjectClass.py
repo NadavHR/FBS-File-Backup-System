@@ -61,16 +61,29 @@ class Project(constants.Constants):
         :param user: the name of the user to give permissions to
         :param write: True for write access, False for readonly
         """
-        path_to_user_perms = f"{self.path_to_permissions()}\\{user}"
+        path_to_project_perms = f"{self.path_to_permissions()}\\{user}"
+        path_to_user_perms = f"{Project.USERS_DIR}\\{user}\\{Project.USER_SHARED_DIR}\\{self.user_name}"
+        path_to_project_in_shared = f"{path_to_user_perms}\\{self.project_name}"
+
+        if not os.path.isdir(path_to_project_perms):
+            os.makedirs(path_to_project_perms)
+
+        if not os.path.isdir(path_to_user_perms):
+            os.makedirs(path_to_user_perms)
+
+        user_saved_perms = open(path_to_project_in_shared, "wb+")
+        user_saved_perms.write((Project.USER_SHARED_PROJECT_WRITE if write
+                                else Project.USER_SHARED_PROJECT_READONLY).to_bytes(1, "big"))
+        user_saved_perms.close()
         if write:
-            f = open(f"{path_to_user_perms}\\{Project.WRITE_PERMISSION_FILE_NAME}", "wb+")
+            f = open(f"{path_to_project_perms}\\{Project.WRITE_PERMISSION_FILE_NAME}", "wb+")
             f.close()
         else:
-            if not os.path.isdir(path_to_user_perms):
-                os.mkdir(path_to_user_perms)
-            elif os.path.isfile(f"{path_to_user_perms}\\{Project.WRITE_PERMISSION_FILE_NAME}"):
-                os.remove(f"{path_to_user_perms}\\{Project.WRITE_PERMISSION_FILE_NAME}")
-            # if none of these conditions that means the permissions dont need changing
+            if not os.path.isdir(path_to_project_perms):
+                os.mkdir(path_to_project_perms)
+            elif os.path.isfile(f"{path_to_project_perms}\\{Project.WRITE_PERMISSION_FILE_NAME}"):
+                os.remove(f"{path_to_project_perms}\\{Project.WRITE_PERMISSION_FILE_NAME}")
+            # if none of these conditions that means the permissions don't need changing
 
     def delete_permission(self, user):
         """
@@ -78,9 +91,29 @@ class Project(constants.Constants):
         SOURCE QUALIFIED FOR THIS ACTION
         :param user: the user to remove the permissions from
         """
-        path_to_user_perms = f"{self.path_to_permissions()}\\{user}"
-        if os.path.isdir(path_to_user_perms):
-            shutil.rmtree(path_to_user_perms)
+        path_to_project_perms = f"{self.path_to_permissions()}\\{user}"
+        path_to_user_perms = \
+            f"{Project.USERS_DIR}\\{user}\\{Project.USER_SHARED_DIR}\\{self.user_name}\\{self.project_name}"
+
+        if os.path.isfile(path_to_user_perms):
+            os.remove(path_to_user_perms)
+        if os.path.isdir(path_to_project_perms):
+            shutil.rmtree(path_to_project_perms)
+
+    def check_permission(self, user_name: str) -> bool or None:
+        """
+        checks if which permissons the user has
+        :param user_name:  the user checked
+        :return: True if write, False if read only, None if none
+        """
+        if user_name == self.user_name:
+            return True
+        if os.path.isfile(
+                f"{self.path_to_permissions()}\\{user_name}\\{Project.WRITE_PERMISSION_FILE_NAME}"):
+            return True
+        if os.path.isdir(f"{self.path_to_permissions()}\\{user_name}"):
+            return False
+        return None
 
     def path_to_latest_commit(self) -> str:
         """
@@ -144,15 +177,6 @@ class Project(constants.Constants):
 
         return True
 
-    def delete_commit(self, commit_number: int) -> bool:
-        """
-        deletes a commit if it exists ONLY USE AFTER MAKING SURE THE USER REQUESTING DELETION IS AUTHORIZED TO DO SO
-        :param commit_number: the number of the commit we want to delete
-        :return: true if the commit was successfully deleted false if it didn't exist
-        """
-
-        # TODO: finish this
-
     def count_commits(self) -> int:
         """
         checks how many commits the project has
@@ -205,3 +229,6 @@ class Project(constants.Constants):
 
     def __eq__(self, other):
         return (self.project_name == other.project_name) and (self.user_name == other.user_name)
+
+    def __str__(self):
+        return f"{self.user_name}\\{self.project_name}"

@@ -147,7 +147,6 @@ class Commit(constants.Constants):
             shutil.rmtree(f"{path_to_parent}\\{Commit.COMMIT_DIR}")
             decrease_all_by_1(n)
         return True
-        # TODO: finish this
 
     def __eq__(self, other):
         return (self.project == other.project) and \

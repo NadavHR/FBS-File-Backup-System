@@ -1,4 +1,6 @@
+import json
 import os
+import shutil
 
 import constants
 from ProjectClass import Project
@@ -19,13 +21,15 @@ class ProjectManager(constants.Constants):
         :param write: True if we ask for an action requiring write permissions, False for readonly
         :return: True if the user has permissions to perform that action, False otherwise
         """
-        if target_project.user_name == user:
+        check = target_project.check_permission(user)
+        if check is None:
+            return False
+        if check:
             return True
-        if write:
-            return os.path.isfile(
-                f"{target_project.path_to_permissions()}\\{user}\\{Project.WRITE_PERMISSION_FILE_NAME}")
-        else:
-            return os.path.isdir(f"{target_project.path_to_permissions()}\\{user}")
+        if check == write:
+            return True
+        return False
+
 
     @staticmethod
     def is_user(user_name: str) -> bool:
@@ -39,9 +43,10 @@ class ProjectManager(constants.Constants):
     @staticmethod
     def _list_projects(user_name: str) -> list[Project]:
         """
-        lists all of the projects a user has, DOES NOT CHECK IF THE USER EXISTS
+        lists all of the projects a user has, DOES NOT CHECK IF THE USER EXISTS,
+         DO NOT USE UNLESS ALREADY MADE SURE USER EXISTS
         :param user_name: the user we want to check
-        :return: a list of every name of a project the user has
+        :return: a list of every project the user has
         """
         projects = []
         dir_path = f"{Project.USERS_DIR}\\{user_name}\\{Project.PROJECTS_DIR}"
@@ -52,16 +57,60 @@ class ProjectManager(constants.Constants):
         return projects
 
     @staticmethod
+    def _list_shared_projects(user_name: str) -> dict[str, dict[str, bool]]:
+        """
+        lists all of the projects shared with a user by other users, DOES NOT CHECK IF THE USER EXISTS,
+         DO NOT USE UNLESS ALREADY MADE SURE USER EXISTS
+        :param user_name: the user we want o check
+        :return: a dict of every user who shares a project containing a dict of all shared projects with the key being
+         the project name and the value being True for write access and False for readonly
+        """
+        shared = {}
+        dir_path = f"{Project.USERS_DIR}\\{user_name}\\{Project.USER_SHARED_DIR}"
+        if os.path.isdir(dir_path):
+            for user in os.listdir(dir_path):  # goes through all users (who ever shared a project with this user)
+                path = os.path.join(dir_path, user)
+                projects = {}
+                if not os.path.isfile(path):
+                    for project_name in os.listdir(path):  # goes through all projects shared by this specific user with
+                        # this user
+                        project_path = os.path.join(path, project_name)
+                        if os.path.isfile(project_path):
+                            f = open(project_path, "rb+")
+                            write = bool.from_bytes(f.read(), "big") and Project.USER_SHARED_PROJECT_WRITE
+                            f.close()
+                            project = Project(user_name=user, project_name=project_name)
+                            if project.exists():  # makes sure the project actually exists
+                                real_perms = project.check_permission(user_name)
+                                if real_perms is None:  # if the user actually has no permissions
+                                    project.delete_permission(user_name)  # makes sure to delete perms from user
+                                else:
+                                    if real_perms != write:
+                                        # makes sure to update the permissions if theres a mismatch
+                                        project.give_permissions(user_name, real_perms)
+                                    projects[project.project_name] = real_perms
+                # if there are no valid projects shared by a user don't add them to the checked list and delete the dir
+                if len(projects) != 0:
+                    shared[user] = projects
+                else:
+                    shutil.rmtree(path)
+        else:
+            os.makedirs(dir_path)
+        return shared
+
+    @staticmethod
     def get_user_projects(user_name: str) -> Response:
         """
-        lists a users projects, REMEMBER TO MAKE SURE THE USER CHECKING IS THE USER BEING CHECKED
+        lists a users projects including shared projects, REMEMBER TO MAKE SURE THE USER CHECKING IS THE USER BEING CHECKED
         :param user_name: the user we want to check
         :return: a response with all of the projects in the response message
         """
         if not ProjectManager.is_user(user_name):
             return ProjectManager.E_USER_DOESNT_EXIST
         projects = [a.project_name for a in ProjectManager._list_projects(user_name)]
-        return Response(success=True, response_message=projects)
+        shared = ProjectManager._list_shared_projects(user_name)
+        r = json.dumps({Project.RESP_SELF_PROJECTS_FIELD: projects, Project.RESP_SHARED_PROJECTS_FIELD: shared})
+        return Response(success=True, response_message=r)
 
     @staticmethod
     def _count_projects(user_name: str) -> int:
