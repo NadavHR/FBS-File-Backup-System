@@ -36,8 +36,8 @@ class Constants:
     # shared projects field
 
     USERS_DIR = "users"
-    PROJECTS_DIR = "projects"
-    # to access a project {USERS_DIR}\{user_name}\{PROJECTS_DIR}\{project_name}
+    USER_PROJECTS_DIR = "projects"
+    # to access a project {USERS_DIR}\{user_name}\{USER_PROJECTS_DIR}\{project_name}
 
     PROJECT_SHARED_DIR = "shared"
     USER_SHARED_DIR = "shared"  # this dir contains a folder for every user who shares a project with this user and a
@@ -76,3 +76,8 @@ class Constants:
 
     PROJECT_DESCRIPTION_FIELD = "description"  # the key to the projects description in project metadata
     PROJECT_DATE_FIELD = "time"  # the key to the projects creation time in project metadata
+
+    USER_PASSWORD_FILE = "password"  # the file containing the hash of the password for the user
+    # to access {USERS_DIR}\{user_name}\{USER_PASSWORD_FILE}
+
+    SESSION_LIFETIME_SECONDS = 3600  # the amount of time (in seconds) a session has to live
