@@ -3,8 +3,8 @@ import shutil
 import unittest
 
 import constants
-from ProjectManager import ProjectManager
-from ProjectClass import Project
+from project_manager import ProjectManager
+from project_class import Project
 
 
 class TestProjectCreation(unittest.TestCase):
@@ -47,9 +47,9 @@ class TestProjectCreation(unittest.TestCase):
             project = Project(user_name="listing_check", project_name=f"project_{i}")
             ProjectManager.add_project(project)
         r = ProjectManager.get_user_projects("listing_check")
-        self.assertTrue(r.success)
+        self.assertTrue(r._success)
         for i in range(3):
-            self.assertTrue(f"project_{i}" in r.response_message)
+            self.assertTrue(f"project_{i}" in r._response_message)
 
     def test_project_listing_bad_user(self):
         self.assertEqual(ProjectManager.get_user_projects("bad user"), ProjectManager.E_USER_DOESNT_EXIST)

@@ -1,8 +1,8 @@
 import shutil
 import unittest
-from ProjectManager import ProjectManager
-from Commit import Commit
-from ProjectClass import Project
+from project_manager import ProjectManager
+from commit import Commit
+from project_class import Project
 
 
 # TODO: finish writing this test
@@ -67,8 +67,8 @@ class TestCommits(unittest.TestCase):
                                    commit_message="hi")
         r1 = (ProjectManager.commit_to(project=project, commit=commit))
         r2 = (ProjectManager.commit_to(project=project, commit=commit))
-        first = r1.success
-        second = r2.success
+        first = r1._success
+        second = r2._success
         self.assertEqual(r1, ProjectManager.S_COMMIT_SUCCESSFUL)
         self.assertEqual(r2, ProjectManager.E_UNKNOWN_ERROR)
         self.assertTrue((first or second) and not (first and second) and first)  # only true if first=True second=False

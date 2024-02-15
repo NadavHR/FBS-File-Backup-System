@@ -3,9 +3,9 @@ import os
 import shutil
 
 import constants
-from ProjectClass import Project
-from Response import Response
-from Commit import Commit
+from project_class import Project
+from response import Response
+from commit import Commit
 
 
 class ProjectManager(constants.Constants):

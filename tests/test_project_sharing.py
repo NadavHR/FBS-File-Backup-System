@@ -4,9 +4,9 @@ import shutil
 import unittest
 
 from constants import Constants
-from ProjectManager import ProjectManager
-from ProjectClass import Project
-from Commit import Commit
+from project_manager import ProjectManager
+from project_class import Project
+from commit import Commit
 
 
 class TestProjectCreation(unittest.TestCase):
@@ -70,27 +70,27 @@ class TestProjectCreation(unittest.TestCase):
         f = open(f"{Constants.USERS_DIR}\\listing_check\\{Constants.USER_SHARED_DIR}\\test_user\\test_project", "wb+")
         f.write(b"\000")
         f.close()
-        r = json.loads(ProjectManager.get_user_projects("listing_check").response_message)
+        r = json.loads(ProjectManager.get_user_projects("listing_check")._response_message)
         self.assertTrue(r[Constants.RESP_SHARED_PROJECTS_FIELD]["test_user"]["test_project"])
 
         ProjectManager.update_project_permissions("listing_check", project, False)
         f = open(f"{Constants.USERS_DIR}\\listing_check\\{Constants.USER_SHARED_DIR}\\test_user\\test_project", "wb+")
         f.write(b"\001")
         f.close()
-        r = json.loads(ProjectManager.get_user_projects("listing_check").response_message)
+        r = json.loads(ProjectManager.get_user_projects("listing_check")._response_message)
         self.assertFalse(r[Constants.RESP_SHARED_PROJECTS_FIELD]["test_user"]["test_project"])
 
         ProjectManager.update_project_permissions("listing_check", project, None)
         f = open(f"{Constants.USERS_DIR}\\listing_check\\{Constants.USER_SHARED_DIR}\\test_user\\test_project", "wb+")
         f.write(b"\001")
         f.close()
-        r = json.loads(ProjectManager.get_user_projects("listing_check").response_message)
+        r = json.loads(ProjectManager.get_user_projects("listing_check")._response_message)
         self.assertFalse("test_user" in (r[Constants.RESP_SHARED_PROJECTS_FIELD]).keys())
 
         ProjectManager.update_project_permissions("listing_check", project, False)
         ProjectManager.update_project_permissions("listing_check", project2, False)
         ProjectManager.update_project_permissions("listing_check", project, None)
-        r = json.loads(ProjectManager.get_user_projects("listing_check").response_message)
+        r = json.loads(ProjectManager.get_user_projects("listing_check")._response_message)
         self.assertFalse(r[Constants.RESP_SHARED_PROJECTS_FIELD]["test_user"]["test_project_2"])
         self.assertFalse("test_project" in r[Constants.RESP_SHARED_PROJECTS_FIELD]["test_user"].keys())
 

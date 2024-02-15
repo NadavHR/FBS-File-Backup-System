@@ -1,4 +1,4 @@
-from Response import Response
+from response import Response
 
 
 class Constants:
@@ -22,6 +22,7 @@ class Constants:
     E_CANT_DELETE_NON_EXISTENT_ACCESS = Response(success=False, response_message="can't delete access to a user who had"
                                                                                  " no access to begin with")
     E_COMMIT_DOESNT_EXIST = Response(success=False, response_message="commit does not exists")
+    E_USER_ALREADY_EXISTS = Response(success=False, response_message="the user already exists")
 
     # possible success messages
     S_PROJECT_CREATED = Response(success=True, response_message="successfully created project")

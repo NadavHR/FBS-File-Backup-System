@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 
-from ProjectClass import Project
+from project_class import Project
 import constants
 
 
