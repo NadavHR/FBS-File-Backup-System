@@ -23,6 +23,9 @@ class Constants:
                                                                                  " no access to begin with")
     E_COMMIT_DOESNT_EXIST = Response(success=False, response_message="commit does not exists")
     E_USER_ALREADY_EXISTS = Response(success=False, response_message="the user already exists")
+    E_BAD_SESSION = Response(success=False, response_message="expired or illegal session ID")
+    E_USER_ALREADY_HAS_VALID_SESSION = Response(success=False, response_message="user already has valid session")
+    E_BAD_LOGIN_CREDENTIALS = Response(success=False, response_message="bad username or password")
 
     # possible success messages
     S_PROJECT_CREATED = Response(success=True, response_message="successfully created project")
@@ -30,6 +33,8 @@ class Constants:
     S_COMMIT_SUCCESSFUL = Response(success=True, response_message="successfully created new commit")
     S_PROJECT_DELETED = Response(success=True, response_message="successfully deleted project")
     S_COMMIT_DELETED = Response(success=True, response_message="successfully deleted commit")
+    S_USER_DELETED = Response(success=True, response_message="successfully deleted user")
+    S_LOGGED_OUT = Response(success=True, response_message="successfully logged out")
 
     RESP_SELF_PROJECTS_FIELD = "projects"  # when asked for listing all of a users projects this is the user's
     # own projects field

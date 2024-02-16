@@ -1,3 +1,4 @@
+import random
 import time
 import constants
 
@@ -21,7 +22,7 @@ class Session(constants.Constants):
         generates a new unused session id
         :return: the int of the session id
         """
-        return sum(ids_to_sessions.keys()) + 1
+        return sum(ids_to_sessions.keys()) + random.randrange(1, 1000)
 
     @staticmethod
     def from_session_id(session_id: int):
@@ -54,7 +55,8 @@ class Session(constants.Constants):
         """
         expires a session
         """
-        ids_to_sessions.pop(self.id)
+        if self.id in ids_to_sessions:
+            ids_to_sessions.pop(self.id)
 
     def auth(self) -> bool:
         """

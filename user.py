@@ -12,13 +12,50 @@ class User(constants.Constants):
     def __init__(self, user_name: str, password_hash: bytes, session: Session = None):
         self.user_name = user_name
         self.password_hash = password_hash
-        self.session = session
         if not (session is None):
-            if user_name in users_to_sessions:
-                users_to_sessions[user_name].expire()
-            users_to_sessions[user_name] = session
+            if session.get_session_user() == user_name:
+                if user_name in users_to_sessions:
+                    users_to_sessions[user_name].expire()
+                users_to_sessions[user_name] = session
+                self._session = session
         elif user_name in users_to_sessions:
-            self.session = users_to_sessions[user_name]
+            self._session = users_to_sessions[user_name]
+        else:
+            self._session = None
+
+    def generate_session(self) -> bool:
+        """
+        generates a new session for this user (if legal)
+        :return: True if successfully generated new session else false
+        """
+        if self.auth_user_session():
+            return False  # user already has session
+
+        if self.user_name in users_to_sessions:
+            if users_to_sessions[self.user_name].auth() and users_to_sessions[self.user_name].user == self.user_name:
+                return False  # user already has session
+
+        if not self.auth_login():
+            return False
+
+        self._session = Session(user=self.user_name)
+        users_to_sessions[self.user_name] = self._session
+        return True
+
+    def end_session(self) -> bool:
+        """
+        end an existing session (if legal)
+        :return: True if session successfully ended, else false
+        """
+        if not self.auth_user_session():
+            return False  # session already invalid
+        users_to_sessions.pop(self.user_name)
+        self.session.expire()
+        return True
+
+    @property
+    def session(self):
+        return self._session
 
     def exists(self) -> bool:
         """
@@ -64,7 +101,7 @@ class User(constants.Constants):
         f.write(self.password_hash)
         f.close()
         if self.session is None:
-            self.session = Session(self.user_name)
+            self._session = Session(self.user_name)
             users_to_sessions[self.user_name] = self.session
         return True
 
@@ -75,9 +112,11 @@ class User(constants.Constants):
         """
         if not self.exists():
             return False
-
+        self.end_session()
         shutil.rmtree(self.to_path())
-        self.session.expire()
+        if not (self.session is None):
+            self.session.expire()
+        return True
 
     def auth_login(self) -> bool:
         """
@@ -86,15 +125,17 @@ class User(constants.Constants):
         """
         if not self.exists():
             return False
-        self.session.refresh()
         return self.password_hash == self._get_password_hash()
 
-    def auth_user(self) -> bool:
+    def auth_user_session(self) -> bool:
         """
-        authenticates the user to check if its allowed to perform an action (auths both password and session)
+        authenticates the user to check if its allowed to perform an action (auths session)
+        NOT the same as calling user.session.auth as it makes sure the session belongs to this user
         :return: True if the user is authenticated else false
         """
-        return self.auth_login() and (self.session.get_session_user() == self.user_name) and (self.session.auth())
+        if self.session is None:
+            return False
+        return (self.session.get_session_user() == self.user_name) and (self.session.auth()) and self.exists()
 
     @classmethod
     def _from_name(cls, user_name: str):
@@ -103,10 +144,12 @@ class User(constants.Constants):
         :return: the user
         """
         user = cls(user_name, b"")
-        f = open(user.path_to_password(), "rb")
-        user.password_hash = f.read()
-        f.close()
-        return user
+        if user.exists():
+            f = open(user.path_to_password(), "rb")
+            user.password_hash = f.read()
+            f.close()
+            return user
+        return None
 
     @classmethod
     def from_session(cls, session: Session):
@@ -126,5 +169,7 @@ class User(constants.Constants):
         :param session_id: the id of the session
         :return: the user who started the session if the session is valid, else returns None
         """
-        session = Session.from_session_id(session_id)
-        return cls.from_session(session)
+        if Session.is_session(session_id):
+            session = Session.from_session_id(session_id)
+            return cls.from_session(session)
+        return None
