@@ -1,8 +1,8 @@
 import shutil
 import unittest
-from ProjectManager import ProjectManager
-from Commit import Commit
-from ProjectClass import Project
+from project_manager import ProjectManager
+from commit import Commit
+from project_class import Project
 
 
 # TODO: finish writing this test

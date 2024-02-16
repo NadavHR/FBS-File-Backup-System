@@ -1,4 +1,4 @@
-from Response import Response
+from response import Response
 
 
 class Constants:
@@ -22,6 +22,10 @@ class Constants:
     E_CANT_DELETE_NON_EXISTENT_ACCESS = Response(success=False, response_message="can't delete access to a user who had"
                                                                                  " no access to begin with")
     E_COMMIT_DOESNT_EXIST = Response(success=False, response_message="commit does not exists")
+    E_USER_ALREADY_EXISTS = Response(success=False, response_message="the user already exists")
+    E_BAD_SESSION = Response(success=False, response_message="expired or illegal session ID")
+    E_USER_ALREADY_HAS_VALID_SESSION = Response(success=False, response_message="user already has valid session")
+    E_BAD_LOGIN_CREDENTIALS = Response(success=False, response_message="bad username or password")
 
     # possible success messages
     S_PROJECT_CREATED = Response(success=True, response_message="successfully created project")
@@ -29,6 +33,8 @@ class Constants:
     S_COMMIT_SUCCESSFUL = Response(success=True, response_message="successfully created new commit")
     S_PROJECT_DELETED = Response(success=True, response_message="successfully deleted project")
     S_COMMIT_DELETED = Response(success=True, response_message="successfully deleted commit")
+    S_USER_DELETED = Response(success=True, response_message="successfully deleted user")
+    S_LOGGED_OUT = Response(success=True, response_message="successfully logged out")
 
     RESP_SELF_PROJECTS_FIELD = "projects"  # when asked for listing all of a users projects this is the user's
     # own projects field
@@ -36,8 +42,8 @@ class Constants:
     # shared projects field
 
     USERS_DIR = "users"
-    PROJECTS_DIR = "projects"
-    # to access a project {USERS_DIR}\{user_name}\{PROJECTS_DIR}\{project_name}
+    USER_PROJECTS_DIR = "projects"
+    # to access a project {USERS_DIR}\{user_name}\{USER_PROJECTS_DIR}\{project_name}
 
     PROJECT_SHARED_DIR = "shared"
     USER_SHARED_DIR = "shared"  # this dir contains a folder for every user who shares a project with this user and a
@@ -76,3 +82,8 @@ class Constants:
 
     PROJECT_DESCRIPTION_FIELD = "description"  # the key to the projects description in project metadata
     PROJECT_DATE_FIELD = "time"  # the key to the projects creation time in project metadata
+
+    USER_PASSWORD_FILE = "password"  # the file containing the hash of the password for the user
+    # to access {USERS_DIR}\{user_name}\{USER_PASSWORD_FILE}
+
+    SESSION_LIFETIME_SECONDS = 3600  # the amount of time (in seconds) a session has to live

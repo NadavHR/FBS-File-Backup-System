@@ -3,9 +3,10 @@ import os
 import shutil
 
 import constants
-from ProjectClass import Project
-from Response import Response
-from Commit import Commit
+from project_class import Project
+from response import Response
+from commit import Commit
+
 
 class ProjectManager(constants.Constants):
 
@@ -30,7 +31,6 @@ class ProjectManager(constants.Constants):
             return True
         return False
 
-
     @staticmethod
     def is_user(user_name: str) -> bool:
         """
@@ -49,7 +49,7 @@ class ProjectManager(constants.Constants):
         :return: a list of every project the user has
         """
         projects = []
-        dir_path = f"{Project.USERS_DIR}\\{user_name}\\{Project.PROJECTS_DIR}"
+        dir_path = f"{Project.USERS_DIR}\\{user_name}\\{Project.USER_PROJECTS_DIR}"
         for path in os.listdir(dir_path):
             # check if current path is a file
             if not os.path.isfile(os.path.join(dir_path, path)):
@@ -153,7 +153,6 @@ class ProjectManager(constants.Constants):
         :param write: the access we want to grant (True for write, False for readonly, None to delete access)
         :return: the response to the request
         """
-        # TODO: add a way to make sure a user knows all projects he'd been given access to
         if not project.exists():
             return ProjectManager.E_PROJECT_DOESNT_EXIST
 

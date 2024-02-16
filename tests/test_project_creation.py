@@ -3,8 +3,8 @@ import shutil
 import unittest
 
 import constants
-from ProjectManager import ProjectManager
-from ProjectClass import Project
+from project_manager import ProjectManager
+from project_class import Project
 
 
 class TestProjectCreation(unittest.TestCase):

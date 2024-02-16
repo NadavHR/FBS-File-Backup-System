@@ -27,7 +27,7 @@ class Project(constants.Constants):
         returns the path to the project
         :return: a string of the path to the project
         """
-        return f"{Project.USERS_DIR}\\{self.user_name}\\{Project.PROJECTS_DIR}\\{self.project_name}"
+        return f"{Project.USERS_DIR}\\{self.user_name}\\{Project.USER_PROJECTS_DIR}\\{self.project_name}"
 
     def exists(self):
         """

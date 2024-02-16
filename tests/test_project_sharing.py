@@ -4,9 +4,9 @@ import shutil
 import unittest
 
 from constants import Constants
-from ProjectManager import ProjectManager
-from ProjectClass import Project
-from Commit import Commit
+from project_manager import ProjectManager
+from project_class import Project
+from commit import Commit
 
 
 class TestProjectCreation(unittest.TestCase):
@@ -60,8 +60,8 @@ class TestProjectCreation(unittest.TestCase):
     def test_listing(self):
         shutil.rmtree(f"{Constants.USERS_DIR}\\listing_check")
         shutil.rmtree(f"{Constants.USERS_DIR}\\test_user")
-        os.makedirs(f"{Constants.USERS_DIR}\\listing_check\\{Constants.PROJECTS_DIR}")
-        os.makedirs(f"{Constants.USERS_DIR}\\test_user\\{Constants.PROJECTS_DIR}")
+        os.makedirs(f"{Constants.USERS_DIR}\\listing_check\\{Constants.USER_PROJECTS_DIR}")
+        os.makedirs(f"{Constants.USERS_DIR}\\test_user\\{Constants.USER_PROJECTS_DIR}")
         project = Project("test_user", "test_project")
         project2 = Project("test_user", "test_project_2")
         ProjectManager.add_project(project)
