@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import unittest
@@ -107,7 +108,6 @@ class TestUserManager(unittest.TestCase):
         r = UserManager.delete_project(session_id, "new project")
         self.assertEqual(r, UserManager.S_PROJECT_DELETED)
 
-
     def test_permission(self):
         user = User("per user", b"password123")
         user.delete()
@@ -118,6 +118,18 @@ class TestUserManager(unittest.TestCase):
         UserManager.add_project(session_id, "new project", "description")
         r = UserManager.update_project_permissions(session_id, "new project", user2.user_name, True)
         self.assertEqual(r, UserManager.S_ACCESS_GRANTED)
+
+    def test_project_info(self):
+        user = User("test_user", b"password123")
+        user.delete()
+        user.create()
+        session_id = user.session.id
+
+        UserManager.delete_project(session_id, "test_project")
+        UserManager.add_project(session_id, "test_project", "hi")
+        r = UserManager.get_project_info(session_id, "test_project", "test_user")
+        self.assertEqual(json.loads(r.response_message)[Project.PROJECT_DESCRIPTION_FIELD], "hi")
+
 
 
 if __name__ == '__main__':

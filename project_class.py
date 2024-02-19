@@ -227,6 +227,19 @@ class Project(constants.Constants):
 
         return True
 
+    def get_info(self) -> str:
+        """
+        gets the projects info, ONLY USE AFTER MAKING SURE THE PROJECT EXISTS
+        :return: a json (str) of the projects metadata
+        """
+        f = open(f"{self.to_path()}\\{Project.PROJECT_METADATA_FILE}", "r")
+        s = f.read()
+        f.close()
+        s = json.loads(s)
+        s[Project.PROJECT_COMMIT_COUNT_FIELD] = self.count_commits()
+        return json.dumps(s)
+
+
     def __eq__(self, other):
         return (self.project_name == other.project_name) and (self.user_name == other.user_name)
 

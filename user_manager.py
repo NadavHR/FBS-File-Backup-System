@@ -161,3 +161,50 @@ class UserManager(constants.Constants):
         project = Project(project_name=project_name, user_name=user.user_name)
         return ProjectManager.update_project_permissions(user_name, project, write)
 
+    @staticmethod
+    def get_commit_info(session_id: int, project_name: str, user_name: str, commit_number: int) -> Response:
+        """
+        gets the info (without data) of a specific commit
+        :param session_id: the id of the session
+        :param project_name: the name of the project the commit is in
+        :param user_name: the name of the user the project belongs to
+        :param commit_number: the number of the commit
+        :return: the response to the action
+        """
+        user = User.from_session_id(session_id)
+        if not UserManager._check_user_session(user):
+            return UserManager.E_BAD_SESSION
+        project = Project(project_name=project_name, user_name=user_name)
+        return ProjectManager.get_commit_info(user.user_name, project, commit_number)
+
+    @staticmethod
+    def get_commit_data(session_id: int, project_name: str, user_name: str, commit_number: int) -> Response:
+        """
+        gets the data of a specific commit
+        :param session_id: the id of the session
+        :param project_name: the name of the project the commit is in
+        :param user_name: the name of the user the project belongs to
+        :param commit_number: the number of the commit
+        :return: the response to the action
+        """
+        user = User.from_session_id(session_id)
+        if not UserManager._check_user_session(user):
+            return UserManager.E_BAD_SESSION
+        project = Project(project_name=project_name, user_name=user_name)
+        return ProjectManager.get_commit_data(user.user_name, project, commit_number)
+
+    @staticmethod
+    def get_project_info(session_id: int, project_name: str, user_name: str) -> Response:
+        """
+        gets the info on a project
+        :param session_id: the id of the session
+        :param project_name: the name of the project
+        :param user_name: the name of the user the project belongs to
+        :return: the response to the action
+        """
+        user = User.from_session_id(session_id)
+        if not UserManager._check_user_session(user):
+            return UserManager.E_BAD_SESSION
+        project = Project(project_name=project_name, user_name=user_name)
+        return ProjectManager.get_project_info(user.user_name, project)
+

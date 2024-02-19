@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import unittest
@@ -5,7 +6,7 @@ import unittest
 import constants
 from project_manager import ProjectManager
 from project_class import Project
-
+from user import User
 
 class TestProjectCreation(unittest.TestCase):
     def test_bad_user(self):
@@ -52,7 +53,21 @@ class TestProjectCreation(unittest.TestCase):
             self.assertTrue(f"project_{i}" in r.response_message)
 
     def test_project_listing_bad_user(self):
+        user = User("bad user", b"123")
+        user.delete()
         self.assertEqual(ProjectManager.get_user_projects("bad user"), ProjectManager.E_USER_DOESNT_EXIST)
+
+    def test_checking_info(self):
+        user = User("test_user", b"123")
+        user.create()
+        project = Project("test_user", "test_project", "hi")
+        project.delete()
+        project.create()
+        r = ProjectManager.get_project_info("test_user", project)
+        self.assertEqual(json.loads(r.response_message)[ProjectManager.PROJECT_DESCRIPTION_FIELD], "hi")
+        self.assertEqual(json.loads(r.response_message)[ProjectManager.PROJECT_COMMIT_COUNT_FIELD], 0)
+
+
 
 
 def main():

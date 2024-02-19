@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import shutil
@@ -230,3 +231,54 @@ class ProjectManager(constants.Constants):
             return ProjectManager.E_UNKNOWN_ERROR
 
         return ProjectManager.S_COMMIT_DELETED
+
+    @staticmethod
+    def get_commit_data(user: str, project: Project, commit_number: int) -> Response:
+        """
+        gets the data stored in a specific commit
+        :param user: the user making the request
+        :param project: the project the commit belongs to
+        :param commit_number: the number of the commit
+        :return: a response object detailing the actions success
+        """
+        if not project.exists():
+            return ProjectManager.E_PROJECT_DOESNT_EXIST
+        if not ProjectManager.authenticate_permissions(user, project, False):
+            return ProjectManager.E_BAD_PERMISSIONS
+        if not ((project.count_commits() >= commit_number) and (commit_number >= 0)):
+            return ProjectManager.E_COMMIT_DOESNT_EXIST
+        commit = Commit.from_commit_number(commit_number, project)
+        return Response(True, base64.b64encode(commit.data))
+
+    @staticmethod
+    def get_commit_info(user: str, project: Project, commit_number: int) -> Response:
+        """
+        gets the info on a specific commit
+        :param user: the user making the request
+        :param project: the project the commit belongs to
+        :param commit_number: the number of the commit
+        :return: a response object detailing the actions success
+        """
+        if not project.exists():
+            return ProjectManager.E_PROJECT_DOESNT_EXIST
+        if not ProjectManager.authenticate_permissions(user, project, False):
+            return ProjectManager.E_BAD_PERMISSIONS
+        if not ((project.count_commits() >= commit_number) and (commit_number >= 0)):
+            return ProjectManager.E_COMMIT_DOESNT_EXIST
+        commit = Commit.from_commit_number(commit_number, project)
+        return Response(True, commit.to_metadata())
+
+    @staticmethod
+    def get_project_info(user: str, project: Project) -> Response:
+        """
+        gets the projects info
+        :param user: the user making the request
+        :param project: the project to check
+        :return: response object detailing the actions success
+        """
+        if not project.exists():
+            return ProjectManager.E_PROJECT_DOESNT_EXIST
+        if not ProjectManager.authenticate_permissions(user, project, False):
+            return ProjectManager.E_BAD_PERMISSIONS
+        return Response(True, project.get_info())
+

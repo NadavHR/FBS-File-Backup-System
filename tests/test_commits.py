@@ -1,9 +1,11 @@
+import base64
+import json
 import shutil
 import unittest
 from project_manager import ProjectManager
 from commit import Commit
 from project_class import Project
-
+from user_manager import UserManager
 
 # TODO: finish writing this test
 class TestCommits(unittest.TestCase):
@@ -111,6 +113,21 @@ class TestCommits(unittest.TestCase):
         c = Commit.from_commit_number(project=project, commit_number=1)
         self.assertEqual(ProjectManager.delete_commit(c), ProjectManager.S_COMMIT_DELETED)
         self.assertTrue(n == project.count_commits() + 1)
+
+    def test_getting_commit(self):
+        UserManager.create_user("test_user", b"123")
+        project = Project("test_user", "test_project")
+        ProjectManager.delete_project(project)
+        ProjectManager.add_project(project)
+        commit = Commit.new_commit(project=project, user="test_user", data=b"Hello, World", commit_name="hi",
+                                   commit_message="hi")
+        ProjectManager.commit_to(project, commit)
+        data_r = ProjectManager.get_commit_data("test_user", project, 0)
+        self.assertEqual(base64.b64decode(data_r.response_message), b"Hello, World")
+        info_r = ProjectManager.get_commit_info("test_user", project, 0)
+        self.assertEqual(json.loads(info_r.response_message)[ProjectManager.COMMIT_MSG_FIELD], "hi")
+
+
 
 
 def main():
