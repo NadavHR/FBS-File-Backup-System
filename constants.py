@@ -88,3 +88,5 @@ class Constants:
     # to access {USERS_DIR}\{user_name}\{USER_PASSWORD_FILE}
 
     SESSION_LIFETIME_SECONDS = 3600  # the amount of time (in seconds) a session has to live
+
+    COMMUNICATION_PORT = 7112
