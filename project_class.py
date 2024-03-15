@@ -237,6 +237,7 @@ class Project(constants.Constants):
         f.close()
         s = json.loads(s)
         s[Project.PROJECT_COMMIT_COUNT_FIELD] = self.count_commits()
+        s[Project.SHARED_USERS_FIELD] = self.list_permission()
         return json.dumps(s)
 
 

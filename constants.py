@@ -83,6 +83,7 @@ class Constants:
     PROJECT_DESCRIPTION_FIELD = "description"  # the key to the projects description in project metadata
     PROJECT_DATE_FIELD = "time"  # the key to the projects creation time in project metadata
     PROJECT_COMMIT_COUNT_FIELD = "commit_count"
+    SHARED_USERS_FIELD = "shared_with"
 
     USER_PASSWORD_FILE = "password"  # the file containing the hash of the password for the user
     # to access {USERS_DIR}\{user_name}\{USER_PASSWORD_FILE}

@@ -5,6 +5,7 @@ import constants
 from user_manager import UserManager
 from commit import Commit
 from project_class import Project
+
 app = FastAPI()
 
 
@@ -67,14 +68,15 @@ def get_commit_info(session_id: str, project_name: str, project_owner: str, comm
     return UserManager.get_commit_info(session_id=session_id, project_name=project_name, user_name=project_owner,
                                        commit_number=commit_id).to_dict()
 
+
 @app.get("/get_commit_data")
-def get_commit_data(session_id: str, project_name: str, project_owner: str,  commit_id: str):
+def get_commit_data(session_id: str, project_name: str, project_owner: str, commit_id: str):
     session_id = safe_to_int(session_id)
     project_name = decode(project_name)
     project_owner = decode(project_owner)
     commit_id = safe_to_int(commit_id)
     return UserManager.get_commit_data(session_id=session_id, project_name=project_name, user_name=project_owner,
-                                       commit_number=commit_id)
+                                       commit_number=commit_id).to_dict()
 
 
 @app.get("/commit")
@@ -108,13 +110,37 @@ def get_project_info(session_id: str, project_name: str, project_owner: str):
     project_name = decode(project_name)
     project_owner = decode(project_owner)
 
-    return UserManager.get_project_info(session_id, project_name, project_owner)
+    return UserManager.get_project_info(session_id, project_name, project_owner).to_dict()
 
 
 @app.get("/get_user_projects")
 def get_user_projects(session_id: str):
     session_id = safe_to_int(session_id)
-    return UserManager.get_user_projects(session_id)
+    return UserManager.get_user_projects(session_id).to_dict()
+
+
+@app.get("/add_project")
+def add_project(session_id: str, project_name: str, project_description: str):
+    session_id = safe_to_int(session_id)
+    project_name = decode(project_name)
+    project_description = decode(project_description)
+    return UserManager.add_project(session_id, project_name, project_description).to_dict()
+
+
+@app.get("/delete_project")
+def delete_project(session_id: str, project_name: str):
+    session_id = safe_to_int(session_id)
+    project_name = decode(project_name)
+    return UserManager.delete_project(session_id, project_name).to_dict()
+
+
+@app.get("/update_project_sharing")
+def update_project_sharing(session_id: str, project_name: str, user_name: str, write: bool = None):
+    session_id = safe_to_int(session_id)
+    project_name = decode(project_name)
+    user_name = decode(user_name)
+    return UserManager.update_project_permissions(session_id, project_name, user_name, write).to_dict()
+
 
 if __name__ == '__main__':
     uvicorn.run(app, host="127.0.0.1", port=constants.Constants.COMMUNICATION_PORT)
