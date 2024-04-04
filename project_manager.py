@@ -245,7 +245,7 @@ class ProjectManager(constants.Constants):
             return ProjectManager.E_PROJECT_DOESNT_EXIST
         if not ProjectManager.authenticate_permissions(user, project, False):
             return ProjectManager.E_BAD_PERMISSIONS
-        if not ((project.count_commits() >= commit_number) and (commit_number >= 0)):
+        if not ((project.count_commits() > commit_number) and (commit_number >= 0)):
             return ProjectManager.E_COMMIT_DOESNT_EXIST
         commit = Commit.from_commit_number(commit_number, project)
         return Response(True, base64.b64encode(commit.data))
@@ -263,7 +263,7 @@ class ProjectManager(constants.Constants):
             return ProjectManager.E_PROJECT_DOESNT_EXIST
         if not ProjectManager.authenticate_permissions(user, project, False):
             return ProjectManager.E_BAD_PERMISSIONS
-        if not ((project.count_commits() >= commit_number) and (commit_number >= 0)):
+        if not ((project.count_commits() > commit_number) and (commit_number >= 0)):
             return ProjectManager.E_COMMIT_DOESNT_EXIST
         commit = Commit.from_commit_number(commit_number, project)
         return Response(True, commit.to_metadata())

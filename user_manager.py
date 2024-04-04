@@ -7,6 +7,7 @@ from project_manager import ProjectManager
 from project_class import Project
 from commit import Commit
 
+
 class UserManager(constants.Constants):
 
     @staticmethod
@@ -93,23 +94,30 @@ class UserManager(constants.Constants):
         user = User.from_session_id(session_id)
         if not UserManager._check_user_session(user):
             return UserManager.E_BAD_SESSION
+        commit.user = user.user_name
         if commit.user != user.user_name:
             return UserManager.E_UNKNOWN_ERROR
         user.session.refresh()
         return ProjectManager.commit_to(project=commit.project, commit=commit)
 
     @staticmethod
-    def delete_commit(session_id: int, commit: Commit) -> Response:
+    def delete_commit(session_id: int, project_name: str, commit_id: int) -> Response:
         """
         deletes a commit from a project
+        :param commit_id: number of the commit
+        :param project_name: name of the project
         :param session_id: the id of the session
-        :param commit: the commit we want to delete
         :return: Response detailing the actions success
         """
         user = User.from_session_id(session_id)
         if not UserManager._check_user_session(user):
             return UserManager.E_BAD_SESSION
         user.session.refresh()
+        project = Project(user.user_name, project_name)
+        try:
+            commit = Commit.from_commit_number(commit_id, project)
+        except:
+            return UserManager.E_UNKNOWN_ERROR
         if not (commit.project.user_name == user.user_name):
             return UserManager.E_BAD_PERMISSIONS
         return ProjectManager.delete_commit(commit=commit)
@@ -207,4 +215,16 @@ class UserManager(constants.Constants):
             return UserManager.E_BAD_SESSION
         project = Project(project_name=project_name, user_name=user_name)
         return ProjectManager.get_project_info(user.user_name, project)
+
+    @staticmethod
+    def get_user_projects(session_id: int):
+        """
+        lists all of the users projects
+        :param session_id: the id of the session
+        :return: the response to the action
+        """
+        user = User.from_session_id(session_id)
+        if not UserManager._check_user_session(user):
+            return UserManager.E_BAD_SESSION
+        return ProjectManager.get_user_projects(user.user_name)
 

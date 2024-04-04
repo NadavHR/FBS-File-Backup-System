@@ -95,8 +95,8 @@ class TestUserManager(unittest.TestCase):
         UserManager.add_project(session_id, "new project", "description")
         project = Project(user_name=user.user_name, project_name="new project")
         commit = Commit.new_commit(user.user_name, "new commit", "hi", b"Hello", project)
-        UserManager.commit(session_id, commit)
-        r = UserManager.delete_commit(session_id, commit)
+        r = UserManager.commit(session_id, commit)
+        r = UserManager.delete_commit(session_id, commit.project.project_name, commit.commit_number)
         self.assertEqual(r, UserManager.S_COMMIT_DELETED)
 
     def test_delete_project(self):
