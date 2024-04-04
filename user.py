@@ -54,7 +54,7 @@ class User(constants.Constants):
         return True
 
     @property
-    def session(self):
+    def session(self) -> Session:
         return self._session
 
     def exists(self) -> bool:
