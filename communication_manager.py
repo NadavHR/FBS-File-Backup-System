@@ -1,5 +1,9 @@
+import base64
+import hashlib
+import json
+
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 import constants
 from user_manager import UserManager
@@ -18,12 +22,21 @@ def decode(s: str) -> str:  # TODO: implement
     return s
 
 
+def hash_password(password: str) -> bytes:
+    """
+    hashes a password
+    :param password: the password
+    :return: the hash of the password
+    """
+    return hashlib.sha256(password.encode()).hexdigest().encode()
+
+
 @app.get("/login")
 def login(user_name: str, password: str):
     user_name = decode(user_name)
     password = decode(password)
 
-    return UserManager.login(user_name, password.encode()).to_dict()
+    return UserManager.login(user_name, hash_password(password)).to_dict()
 
 
 @app.get("/logout")
@@ -35,12 +48,11 @@ def logout(session_id: int):
 def sign_up(user_name: str, password: str):
     user_name = decode(user_name)
     password = decode(password)
-    return UserManager.create_user(user_name, password.encode()).to_dict()
+    return UserManager.create_user(user_name, hash_password(password)).to_dict()
 
 
 @app.get("/delete_user")
 def delete_user(session_id: int):
-
     return UserManager.delete_user(session_id).to_dict()
 
 
@@ -60,18 +72,21 @@ def get_commit_data(session_id: int, project_name: str, project_owner: str, comm
                                        commit_number=commit_id).to_dict()
 
 
-@app.get("/commit")
-def commit(session_id: int, project_name: str, project_owner: str, commit_name: str,
-           commit_message: str, commit_data: str):
+@app.post("/commit")
+async def commit(session_id: int, project_name: str, project_owner: str, commit_name: str,
+           commit_message: str, request: Request):
     project_name = decode(project_name)
     project_owner = decode(project_owner)
     commit_name = decode(commit_name)
     commit_message = decode(commit_message)
-    commit_data = decode(commit_data).encode()
+    COMMIT_DATA_FIELD = "commit_data"
+    j = await request.body()
+    j = json.loads(j)
+    commit_data = decode(j[COMMIT_DATA_FIELD]).encode()
 
     project = Project(project_owner, project_name)
     c = Commit.new_commit(user="", commit_name=commit_name,
-                          commit_message=commit_message, project=project, data=commit_data)
+                          commit_message=commit_message, project=project, data=base64.b64decode(commit_data))
     return UserManager.commit(session_id, c).to_dict()
 
 
@@ -115,5 +130,9 @@ def update_project_sharing(session_id: int, project_name: str, user_name: str, w
     return UserManager.update_project_permissions(session_id, project_name, user_name, write).to_dict()
 
 
-if __name__ == '__main__':
+def main():
     uvicorn.run(app, host="127.0.0.1", port=constants.Constants.COMMUNICATION_PORT)
+
+
+if __name__ == '__main__':
+    main()

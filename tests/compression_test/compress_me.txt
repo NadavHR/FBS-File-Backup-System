@@ -1,0 +1,10 @@
+hello, i am file, i wish to be compressed
+i have some text here.
+
+maybe ill even add weird characters
+
+שלום, אני קובץ, אני רוצה שיידחסו אותי
+
+Æ Ç Ð Ñ Þ ßßβ æ ç ð ñ ø þ
+À Á Â Ã Ä Å È É Ê Ë Ì Í Î Ï Ò Ó Ô Õ Ö Ø Ù Ú Û Ü Ý
+à á â ã ä å è é ê ë ì í î ï ò ó ô õ ö ù ú û ý ÿ

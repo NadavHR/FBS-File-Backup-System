@@ -43,7 +43,7 @@ def encode(data: bytes) -> str:
     :param data: the data (zipped)
     :return: a string encoded with the data
     """
-    return base64.b64encode(data)
+    return base64.b64encode(data).decode()
 
 
 def compress(path: str) -> bytes:
