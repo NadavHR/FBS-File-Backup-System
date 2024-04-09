@@ -1,8 +1,6 @@
 import json
-
 import requests
-
-from client import file_utils
+import file_utils
 
 URL = "http://127.0.0.1:7112"
 SUCCESS_FIELD = "success"
@@ -19,6 +17,41 @@ COMMIT_NAME_FIELD = "commit_name"
 COMMIT_MESSAGE_FIELD = "commit_message"
 COMMIT_DATA_FIELD = "commit_data"
 WRITE_PERMISSION_FIELD = "write"
+
+SESSION_ID_CACHE_PATH = "session_id_cache.txt"
+
+
+current_session_id = None
+
+
+def cache_session_id(session_id: int):
+    global current_session_id
+    current_session_id = session_id
+    try:
+        f = open(SESSION_ID_CACHE_PATH, "w")
+        f.write(str(session_id))
+        f.close()
+    except:
+        pass
+
+
+def get_cached_session_id() -> int or None:
+    global current_session_id
+    if not (current_session_id is None):
+        return current_session_id
+    try:
+        f = open(SESSION_ID_CACHE_PATH, "r")
+        session_id = f.read()
+        f.close()
+        session_id = int(session_id)
+        current_session_id = session_id
+        return session_id
+    except:
+        return None
+
+
+
+
 
 def encode(s: str) -> str:
     """
@@ -39,7 +72,12 @@ def login(user_name: str, password: str) -> (bool, int or str):
     params = {USER_NAME_FIELD: encode(user_name),
               PASSWORD_FIELD: encode(password)}
     resp = (requests.get(url=f"{URL}/login", params=params)).json()
-    return resp[SUCCESS_FIELD], int(resp[MSG_FIELD]) if resp[SUCCESS_FIELD] else resp[MSG_FIELD]
+    if resp[SUCCESS_FIELD]:
+        session_id = int(resp[MSG_FIELD])
+        cache_session_id(session_id)
+        return resp[SUCCESS_FIELD], session_id
+    return resp[SUCCESS_FIELD], resp[MSG_FIELD]
+
 
 
 def logout(session_id: int) -> (bool, str):
@@ -62,7 +100,11 @@ def sign_up(user_name: str, password: str) -> (bool, int or str):
     params = {USER_NAME_FIELD: encode(user_name),
               PASSWORD_FIELD: encode(password)}
     resp = (requests.get(url=f"{URL}/sign_up", params=params)).json()
-    return resp[SUCCESS_FIELD], int(resp[MSG_FIELD]) if resp[SUCCESS_FIELD] else resp[MSG_FIELD]
+    if resp[SUCCESS_FIELD]:
+        session_id = int(resp[MSG_FIELD])
+        cache_session_id(session_id)
+        return resp[SUCCESS_FIELD], session_id
+    return resp[SUCCESS_FIELD], resp[MSG_FIELD]
 
 
 def delete_user(session_id: int) -> (bool, str):
