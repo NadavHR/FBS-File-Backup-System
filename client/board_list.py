@@ -50,9 +50,9 @@ class AppCommit(UserControl):
                     PopupMenuButton(
                         items=[
                             PopupMenuItem(
-                                content=Text(value="Edit", style="labelMedium",
+                                content=Text(value="Save to your machine", style="labelMedium",
                                              text_align="center", color=colors.WHITE),
-                                on_click=self.edit_title),
+                                on_click=lambda e: self.project.save_commit(self.commit_id)),
                             PopupMenuItem(),
                             PopupMenuItem(
                                 content=Text(value="Delete", style="labelMedium",

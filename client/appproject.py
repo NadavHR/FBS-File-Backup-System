@@ -78,6 +78,66 @@ class AppProject(UserControl):
         self.list_wrap.update()
         self.view.update()
 
+    def save_commit(self, commit_id: int):
+        def close_dlg(e):
+            save_button.disabled = True
+            self.page.update()
+            self.update()
+            if (hasattr(e.control, "text") and not e.control.text == "Cancel") or (type(e.control) is TextField and e.control.value != ""):
+                if os.path.isdir(path_field.value):
+                    ok, msg = call_endpoints.get_commit_data(call_endpoints.current_session_id,
+                                                             self.name,
+                                                             self.owner_name,
+                                                             commit_id,
+                                                             path_field.value)
+                    if not ok:
+                        self.app.pop_error(msg)
+                    elif msg:
+                        self.app.pop_error(f"Saved to {path_field.value}")
+
+                    self.update_commits()
+                    dialog.open = False
+                else:
+                    path_field.error_text = "not a valid path"
+            self.page.update()
+            self.update()
+
+        def close(e):
+            dialog.open = False
+            self.page.update()
+            self.update()
+
+        def textfield_change(e):
+            if path_field.value == "":
+                save_button.disabled = True
+            else:
+                save_button.disabled = False
+            self.page.update()
+        path_field = TextField(label="Path to save to * ", on_submit=close_dlg, on_change=textfield_change)
+        save_button = ElevatedButton(
+            text="Save", bgcolor=colors.BLUE_400, on_click=close_dlg, disabled=True)
+        dialog = AlertDialog(
+            title=Text("Save to?"),
+            content=Column([
+                Container(content=Column(
+                        [
+                            path_field
+                        ]),
+                          padding=padding.symmetric(horizontal=5)),
+                Row([
+                    ElevatedButton(
+                        text="Cancel", on_click=close),
+                    save_button
+                ], alignment="spaceBetween")
+            ], tight=True, alignment="center"),
+
+            on_dismiss=lambda e: print("Modal dialog dismissed!"),
+        )
+        self.page.dialog = dialog
+        dialog.open = True
+        self.page.update()
+        name_field.focus()
+
     def create_list(self, e):
         def close_dlg(e):
             create_button.disabled = True
