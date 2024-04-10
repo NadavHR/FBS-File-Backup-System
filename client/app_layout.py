@@ -1,4 +1,4 @@
-from board import Board
+from appproject import AppProject
 import call_endpoints
 from data_store import DataStore
 from flet import (
@@ -25,12 +25,13 @@ from sidebar import Sidebar
 
 
 class AppLayout(Row):
-    def __init__(self, app, page: Page, store: DataStore, *args, **kwargs):
+    def __init__(self, app, page: Page, store_own: DataStore, store_shared: DataStore, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.app = app
         self.page = page
         self.page.on_resize = self.page_resize
-        self.store: DataStore = store
+        self.store_own: DataStore = store_own
+        self.store_shared = store_shared
         self.toggle_nav_rail_button = IconButton(
             icon=icons.ARROW_CIRCLE_LEFT,
             icon_color=colors.BLUE_GREY_400,
@@ -38,11 +39,41 @@ class AppLayout(Row):
             selected_icon=icons.ARROW_CIRCLE_RIGHT,
             on_click=self.toggle_nav_rail,
         )
-        self.sidebar = Sidebar(self, self.store, page)
-        self.members_view = Text("members view")
+        self.sidebar = Sidebar(self, self.store_own, page)
         self.login_for_projects_message = Row([Text("log in to view projects")])
         self.no_projects_message = Row([Text("No Projects to Display")])
-        self.all_boards_view = Column(
+        self.shared_view = Column(
+            [
+                Row(
+                    [
+                        Container(
+                            Text(value="Shared Projects", style="headlineMedium"),
+                            expand=True,
+                            padding=padding.only(top=15),
+                        ),
+                    ]
+                ),
+                # Row(
+                #     [
+                #         TextField(
+                #             hint_text="Search all Projects",
+                #             autofocus=False,
+                #             content_padding=padding.only(left=10),
+                #             width=200,
+                #             height=40,
+                #             text_size=12,
+                #             border_color=colors.BLACK26,
+                #             focused_border_color=colors.BLUE_ACCENT,
+                #             suffix_icon=icons.SEARCH,
+                #         )
+                #     ]
+                # ),
+                self.login_for_projects_message,
+            ],
+            expand=True,
+        )
+        #Text("Shared Projects")
+        self.projects_view = Column(
             [
                 Row(
                     [
@@ -55,10 +86,10 @@ class AppLayout(Row):
                             TextButton(
                                 "Add new Project",
                                 icon=icons.ADD,
-                                on_click=self.app.add_board,
+                                on_click=self.app.add_project,
                                 style=ButtonStyle(
                                     bgcolor={
-                                        "": colors.BLUE_400,
+                                        "": colors.BLUE_GREY_600,
                                         "hovered": colors.BLUE_900,
                                     },
                                     shape={"": RoundedRectangleBorder(radius=3)},
@@ -68,26 +99,26 @@ class AppLayout(Row):
                         ),
                     ]
                 ),
-                Row(
-                    [
-                        TextField(
-                            hint_text="Search all Projects",
-                            autofocus=False,
-                            content_padding=padding.only(left=10),
-                            width=200,
-                            height=40,
-                            text_size=12,
-                            border_color=colors.BLACK26,
-                            focused_border_color=colors.BLUE_ACCENT,
-                            suffix_icon=icons.SEARCH,
-                        )
-                    ]
-                ),
+                # Row(
+                #     [
+                #         TextField(
+                #             hint_text="Search all Projects",
+                #             autofocus=False,
+                #             content_padding=padding.only(left=10),
+                #             width=200,
+                #             height=40,
+                #             text_size=12,
+                #             border_color=colors.BLACK26,
+                #             focused_border_color=colors.BLUE_ACCENT,
+                #             suffix_icon=icons.SEARCH,
+                #         )
+                #     ]
+                # ),
                 self.login_for_projects_message,
             ],
             expand=True,
         )
-        self._active_view: Control = self.all_boards_view
+        self._active_view: Control = self.projects_view
 
         self.controls = [self.sidebar, self.toggle_nav_rail_button, self.active_view]
 
@@ -103,38 +134,40 @@ class AppLayout(Row):
         self.update()
 
     def set_board_view(self, i):
-        self.active_view = self.store.get_boards()[i]
+        self.active_view = self.store_own.get_projects()[i]
         self.sidebar.bottom_nav_rail.selected_index = i
         self.sidebar.top_nav_rail.selected_index = None
         self.sidebar.update()
         self.page.update()
         self.page_resize()
 
-    def set_all_boards_view(self):
-        self.active_view = self.all_boards_view
-        self.hydrate_all_boards_view()
+    def set_projects_view(self):
+        self.active_view = self.projects_view
+        self.app.update_projects()
+        self.hydrate_all_projects_view()
         self.sidebar.top_nav_rail.selected_index = 0
         self.sidebar.bottom_nav_rail.selected_index = None
         self.sidebar.update()
         self.update()
         self.page.update()
 
-    def set_members_view(self):
-        self.active_view = self.members_view
+    def set_shared_view(self):
+        self.active_view = self.shared_view
+        self.app.update_projects()
         self.sidebar.top_nav_rail.selected_index = 1
         self.sidebar.bottom_nav_rail.selected_index = None
         self.sidebar.update()
         self.page.update()
 
     def page_resize(self, e=None):
-        if type(self.active_view) is Board:
+        if type(self.active_view) is AppProject:
             self.active_view.resize(
                 self.sidebar.visible, self.page.width, self.page.height
             )
         self.page.update()
 
-    def hydrate_all_boards_view(self):
-        self.all_boards_view.controls[-1] = Row(
+    def hydrate_all_projects_view(self):
+        self.projects_view.controls[-1] = Row(
             [
                 Container(
                     content=Row(
@@ -156,16 +189,27 @@ class AppLayout(Row):
                                                 data=b,
                                             ),
 
-                                            on_click=self.app.delete_board,
+                                            on_click=self.app.delete_project,
 
                                         ),
-                                        PopupMenuItem(),
                                         PopupMenuItem(
                                             content=Text(
-                                                value="Archive",
+                                                value="Change Share Settings",
                                                 style="labelMedium",
                                                 text_align="center",
+                                                data=b,
                                             ),
+
+                                            on_click=self.app.change_project_share,
+                                        ),
+                                        PopupMenuItem(
+                                            content=Text(
+                                                value="Check Info",
+                                                style="labelMedium",
+                                                text_align="center",
+                                                data=b,
+                                            ),
+                                            on_click=self.app.check_project_info,
                                         ),
                                     ]
                                 ),
@@ -177,24 +221,69 @@ class AppLayout(Row):
                     ),
                     border=border.all(1, colors.BLACK38),
                     border_radius=border_radius.all(5),
-                    bgcolor=colors.WHITE60,
+                    bgcolor=colors.BLUE_GREY_400,
                     padding=padding.all(10),
                     width=250,
                     data=b,
                 )
-                for b in self.store.get_boards()
+                for b in self.store_own.get_projects()
             ],
             wrap=True,
         )
+        self.shared_view.controls[-1] = Row(
+            [
+                Container(
+                    content=Row(
+                        [
+                            Container(
+                                content=Text(value=b.name),
+                                data=b,
+                                expand=True,
+                                on_click=self.board_click,
+                            ),
+                            Container(
+                                content=PopupMenuButton(
+                                        items=[
+                                            PopupMenuItem(
+                                            content=Text(
+                                                value="Check Info",
+                                                style="labelMedium",
+                                                text_align="center",
+                                                data=b,
+                                            ),
+                                            on_click=self.app.check_project_info,
+                                        ),
+                                        ]
+                                )
+                            )
+                        ],
+                        alignment="spaceBetween",
+                    ),
+                    border=border.all(1, colors.BLACK38),
+                    border_radius=border_radius.all(5),
+                    bgcolor=colors.BLUE_GREY_400,
+                    padding=padding.all(10),
+                    width=250,
+                    data=b,
+                )
+                for b in self.store_shared.get_projects()
+            ],
+            wrap=True,
+        )
+
         if call_endpoints.current_session_id is None:
-            self.all_boards_view.controls[-1] = self.login_for_projects_message
-        elif len(self.store.get_boards()) == 0:
-            self.all_boards_view.controls[-1] = self.no_projects_message
+            self.projects_view.controls[-1] = self.login_for_projects_message
+            self.shared_view.controls[-1] = self.login_for_projects_message
+        else:
+            if len(self.store_own.get_projects()) == 0:
+                self.projects_view.controls[-1] = self.no_projects_message
+            if len(self.store_shared.get_projects()) == 0:
+                self.shared_view.controls[-1] = self.no_projects_message
         self.sidebar.sync_board_destinations()
 
 
     def board_click(self, e):
-        self.sidebar.bottom_nav_change(self.store.get_boards().index(e.control.data))
+        self.sidebar.bottom_nav_change(self.store_own.get_projects().index(e.control.data))
 
     def toggle_nav_rail(self, e):
         self.sidebar.visible = not self.sidebar.visible

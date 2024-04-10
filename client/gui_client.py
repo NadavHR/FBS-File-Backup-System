@@ -1,7 +1,9 @@
 import flet
+from flet_core import border_radius, border
+
 import call_endpoints
 from app_layout import AppLayout
-from board import Board
+from appproject import AppProject
 from data_store import DataStore
 from flet import (
     AlertDialog,
@@ -25,6 +27,7 @@ from flet import (
     margin,
     padding,
     theme,
+    Checkbox,
 )
 from memory_store import InMemoryStore
 from app_user import User
@@ -32,13 +35,17 @@ from app_user import User
 SHARED_PROJECTS_FIELD = "shared"
 OWN_PROJECTS_FIELD = "projects"
 SESSION_EXPIRED_MESSAGE = "expired or illegal session ID"
+
+
 class ClientApp(UserControl):
-    def __init__(self, page: Page, store: DataStore):
+    def __init__(self, page: Page, store_own: DataStore, store_shared: DataStore):
         super().__init__()
         self.page = page
-        self.store: DataStore = store
+        self.own_projects_store: DataStore = store_own
+        self.shared_projects_store: DataStore = store_shared
         self.page.on_route_change = self.route_change
-        self.boards = self.store.get_boards()
+        self.boards = self.own_projects_store.get_projects()
+        self.user = ""
         self.login_profile_button = PopupMenuItem(text="Log in", on_click=self.login_popup)
         self.appbar_items = [
             self.login_profile_button,
@@ -66,7 +73,8 @@ class ClientApp(UserControl):
         self.layout = AppLayout(
             self,
             self.page,
-            self.store,
+            self.own_projects_store,
+            self.shared_projects_store,
             tight=True,
             expand=True,
             vertical_alignment="start",
@@ -84,6 +92,10 @@ class ClientApp(UserControl):
             )
         )
         self.page.update()
+        try:
+            call_endpoints.logout(call_endpoints.get_cached_session_id())
+        except:
+            pass
         # create an initial board for demonstration if no boards
         # if len(self.boards) == 0:
         #     self.create_new_board("My First Board")
@@ -111,8 +123,8 @@ class ClientApp(UserControl):
                 self.page.update()
                 return
             else:
-                if user not in self.store.get_users():
-                    self.store.add_user(user)
+                if user not in self.own_projects_store.get_users():
+                    self.own_projects_store.add_user(user)
                 self.user = user_name.value
                 self.page.client_storage.set("current_user", user_name.value)
 
@@ -146,6 +158,7 @@ class ClientApp(UserControl):
         def close_dlg(e):
             dialog.open = False
             self.logout()
+
         dialog = AlertDialog(
             title=Text("are you sure you want to Logout?"),
             content=Column(
@@ -165,32 +178,32 @@ class ClientApp(UserControl):
         call_endpoints.cache_session_id(None)
         self.appbar_items[0] = self.login_profile_button
         self.update_projects()
-
-
+        self.layout.hydrate_all_projects_view()
+        self.layout.active_view.update()
 
     def route_change(self, e):
         troute = TemplateRoute(self.page.route)
         if troute.match("/"):
-            self.page.go("/boards")
+            self.page.go("/Projects")
         elif troute.match("/board/:id"):
-            if int(troute.id) > len(self.store.get_boards()):
+            if int(troute.id) > len(self.own_projects_store.get_projects()):
                 self.page.go("/")
                 return
             self.layout.set_board_view(int(troute.id))
-        elif troute.match("/boards"):
-            self.layout.set_all_boards_view()
-        elif troute.match("/members"):
-            self.layout.set_members_view()
+        elif troute.match("/Projects"):
+            self.layout.set_projects_view()
+        elif troute.match("/Shared"):
+            self.layout.set_shared_view()
         self.page.update()
 
-    def add_board(self, e):
+    def add_project(self, e):
         def submit_data(e):
             ok, msg = call_endpoints.add_project(call_endpoints.current_session_id, name_field.value, desc_field.value)
             if ok:
                 if (hasattr(e.control, "text") and not e.control.text == "Cancel") or (
-                    type(e.control) is TextField and e.control.value != ""
+                        type(e.control) is TextField and e.control.value != ""
                 ):
-                    self.create_new_board(name_field.value)
+                    self.create_new_project(name_field.value)
                 dialog.open = False
             else:
                 name_field.error_text = msg
@@ -218,16 +231,174 @@ class ClientApp(UserControl):
         create_button = ElevatedButton(
             text="Create", bgcolor=colors.BLUE_400, on_click=submit_data, disabled=True
         )
+        if not (call_endpoints.current_session_id is None):
+            dialog = AlertDialog(
+                title=Text("Create new Project"),
+                content=Column(
+                    [
+                        name_field,
+                        desc_field,
+                        Row(
+                            [
+                                ElevatedButton(text="Cancel", on_click=close),
+                                create_button,
+                            ],
+                            alignment="spaceBetween",
+                        ),
+                    ],
+                    tight=True,
+                ),
+                on_dismiss=lambda e: print("Modal dialog dismissed!"),
+            )
+        else:
+            dialog = AlertDialog(title=Text("log in to create projects"))
+        self.page.dialog = dialog
+        dialog.open = True
+        self.page.update()
+        name_field.focus()
+
+    def create_new_project(self, project_name):
+        new_project = AppProject(self, self.own_projects_store, project_name, self.user)
+        self.own_projects_store.add_project(new_project)
+        self.layout.hydrate_all_projects_view()
+
+    def _add_shared_project(self, project_name, owner):
+        new_project = AppProject(self, self.shared_projects_store, project_name, owner)
+        self.shared_projects_store.add_project(new_project)
+        self.layout.hydrate_all_projects_view()
+
+    def delete_project(self, e):
+        call_endpoints.delete_project(call_endpoints.current_session_id,
+                                      e.control.content.data.name)
+        self.own_projects_store.remove_project(e.control.content.data)
+        self.layout.set_projects_view()
+        self.update_projects()
+
+    def check_project_info(self, e):
+        project_name = e.control.content.data.name
+        SHARED_WITH_FIELD = "shared_with"
+        COMMIT_COUNT_FIELD = "commit_count"
+        DESCRIPTION_FIELD = "description"
+        TIME_FIELD = "time"
+
+        def close(e):
+            dialog.open = False
+            self.page.update()
+
+        ok, msg = call_endpoints.get_project_info(call_endpoints.current_session_id,
+                                                  project_name,
+                                                  e.control.content.data.owner_name)
+        if ok:
+            dialog = AlertDialog(
+                title=Text(f"check info on {project_name}"),
+                content=Column(
+                    [
+                        Text(f"description: {msg[DESCRIPTION_FIELD]}"),
+                        Text(f"project owner: {e.control.content.data.owner_name}"),
+                        Text(f"project created at {msg[TIME_FIELD]}"),
+                        Text(f"this project has {msg[COMMIT_COUNT_FIELD]} commits"),
+                        Text("\npermissions: "),
+                        Container(
+                            content=Column([
+                                Row([
+                                    Text(access[0]),
+                                    Text("Write" if access[1] else "ReadOnly", color=colors.GREEN_ACCENT)
+                                ])
+                                for access in msg[SHARED_WITH_FIELD]
+                            ]
+                            ),
+                            border_radius=border_radius.all(5),
+                            border=border.all(3, colors.BLUE_GREY_700),
+                            bgcolor=colors.BLUE_GREY_700,
+                            padding=padding.all(10),
+                            width=250,
+                        ),
+                        Row(
+                            [
+                                ElevatedButton(text="Cancel", on_click=close),
+                            ],
+                            alignment="spaceBetween",
+                        ),
+                    ],
+                    tight=True,
+                ),
+                on_dismiss=lambda e: print("Modal dialog dismissed!"),
+            )
+        else:
+            dialog = AlertDialog(
+                title=Text(f"check info on {project_name}"),
+                content=Column(
+                    [
+                        Text(f"Error: {msg}", color=colors.RED_ACCENT),
+                        Row(
+                            [
+                                ElevatedButton(text="Cancel", on_click=close),
+                            ],
+                            alignment="spaceBetween",
+                        ),
+                    ],
+                    tight=True,
+                ),
+                on_dismiss=lambda e: print("Modal dialog dismissed!"),
+            )
+
+        self.page.dialog = dialog
+        dialog.open = True
+        self.page.update()
+
+    def change_project_share(self, e):
+        project_name = e.control.content.data.name
+        name_field = TextField(label="user to share with")
+        write = Checkbox(label="Write Access", width=200)
+
+        def submit_data(e):
+            if name_field.value == "":
+                name_field.error_text = "please enter name"
+                self.page.update()
+                return
+            ok, msg = call_endpoints.update_project_sharing(call_endpoints.current_session_id, project_name,
+                                                            name_field.value, write.value)
+            if ok:
+                close(e)
+                return
+            name_field.error_text = msg
+            self.page.update()
+
+        def delete_access(e):
+            if name_field.value == "":
+                name_field.error_text = "please enter name"
+                self.page.update()
+                return
+            ok, msg = call_endpoints.update_project_sharing(call_endpoints.current_session_id, project_name,
+                                                            name_field.value)
+            if ok:
+                close(e)
+                return
+            name_field.error_text = msg
+            self.page.update()
+
+        def close(e):
+            dialog.open = False
+            self.page.update()
+
+        share_button = ElevatedButton(text="update sharing", bgcolor=colors.BLUE_400, on_click=submit_data)
+        delete_access_button = ElevatedButton(text="Delete access to user", bgcolor=colors.RED_ACCENT,
+                                              on_click=delete_access)
         dialog = AlertDialog(
-            title=Text("Create new Project"),
+            title=Text(f"change access to {project_name}"),
             content=Column(
                 [
-                    name_field,
-                    desc_field,
+                    Column(
+                        [
+                            name_field,
+                            write
+                        ]
+                    ),
                     Row(
                         [
                             ElevatedButton(text="Cancel", on_click=close),
-                            create_button,
+                            share_button,
+                            delete_access_button
                         ],
                         alignment="spaceBetween",
                     ),
@@ -236,50 +407,41 @@ class ClientApp(UserControl):
             ),
             on_dismiss=lambda e: print("Modal dialog dismissed!"),
         )
+
         self.page.dialog = dialog
         dialog.open = True
         self.page.update()
-        name_field.focus()
-
-    def create_new_board(self, board_name):
-        new_board = Board(self, self.store, board_name)
-        self.store.add_board(new_board)
-        self.layout.hydrate_all_boards_view()
-
-    def delete_board(self, e):
-        call_endpoints.delete_project(call_endpoints.current_session_id,
-                                      e.control.content.data.name)
-        self.store.remove_board(e.control.content.data)
-        self.layout.set_all_boards_view()
-        self.update_projects()
 
     def update_projects(self):
-        for project in self.store.get_boards():
-            self.store.remove_board(project)
-            self.layout.set_all_boards_view()
+        for project in self.own_projects_store.get_projects():
+            self.own_projects_store.remove_project(project)
+        for project in self.shared_projects_store.get_projects():
+            self.shared_projects_store.remove_project(project)
+        # self.layout.set_projects_view()
         if not (call_endpoints.get_cached_session_id() is None):
             ok, projects = call_endpoints.get_user_projects(call_endpoints.current_session_id)
             if ok:
-                for name in projects[OWN_PROJECTS_FIELD]:
-                    self.create_new_board(name)
+                for project in projects[OWN_PROJECTS_FIELD]:
+                    self.create_new_project(project)
+                for name in projects[SHARED_PROJECTS_FIELD]:
+                    for project in projects[SHARED_PROJECTS_FIELD][name]:
+                        self._add_shared_project(project, name)
             elif projects == SESSION_EXPIRED_MESSAGE:
                 self.logout()
-        self.layout.hydrate_all_boards_view()
+        # self.layout.hydrate_all_projects_view()
         self.page.update()
 
 
 def main(page: Page):
-
     page.title = "FBS"
     page.padding = 0
     page.theme = theme.Theme(font_family="Verdana")
     page.theme.page_transitions.windows = "cupertino"
     page.bgcolor = colors.BLUE_GREY_900
-    app = ClientApp(page, InMemoryStore())
+    app = ClientApp(page, InMemoryStore(), InMemoryStore())
     page.add(app)
     page.update()
     app.initialize()
-
 
 
 flet.app(target=main)

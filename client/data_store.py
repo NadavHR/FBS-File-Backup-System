@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from board import Board
+    from appproject import AppProject
     from board_list import BoardList
     from user import User
     from item import Item
@@ -8,19 +8,19 @@ if TYPE_CHECKING:
 
 class DataStore:
 
-    def add_board(self, model) -> None:
+    def add_project(self, model) -> None:
         raise NotImplementedError
 
-    def get_board(self, id) -> "Board":
+    def get_project(self, id) -> "AppProject":
         raise NotImplementedError
 
-    def get_boards(self) -> list["Board"]:
+    def get_projects(self) -> list["AppProject"]:
         raise NotImplementedError
 
-    def update_board(self, model, update):
+    def update_project(self, model, update):
         raise NotImplementedError
 
-    def remove_board(self, board) -> None:
+    def remove_project(self, board) -> None:
         raise NotImplementedError
 
     def add_user(self, model) -> None:

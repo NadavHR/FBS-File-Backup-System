@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from board import Board
+    from appproject import AppProject
 import itertools
 from flet import (
     UserControl,
@@ -29,7 +29,7 @@ from data_store import DataStore
 class BoardList(UserControl):
     id_counter = itertools.count()
 
-    def __init__(self, board: "Board", store: DataStore, title: str, color: str = ""):
+    def __init__(self, board: "AppProject", store: DataStore, title: str, color: str = ""):
         super().__init__()
         self.board_list_id = next(BoardList.id_counter)
         self.store: DataStore = store

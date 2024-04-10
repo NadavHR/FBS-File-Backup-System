@@ -23,15 +23,16 @@ from board_list import BoardList
 from data_store import DataStore
 
 
-class Board(UserControl):
+class AppProject(UserControl):
     id_counter = itertools.count()
 
-    def __init__(self, app, store: DataStore, name: str):
+    def __init__(self, app, store: DataStore, name: str, owner: str):
         super().__init__()
-        self.board_id = next(Board.id_counter)
+        self.board_id = next(AppProject.id_counter)
         self.store: DataStore = store
         self.app = app
         self.name = name
+        self.owner_name = owner
         self.add_list_button = FloatingActionButton(
             icon=icons.ADD, text="add a list", height=30, on_click=self.create_list)
 

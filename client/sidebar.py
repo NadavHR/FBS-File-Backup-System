@@ -28,14 +28,14 @@ class Sidebar(UserControl):
         self.nav_rail_visible = True
         self.top_nav_items = [
             NavigationRailDestination(
-                label_content=Text("Boards"),
-                label="Boards",
+                label_content=Text("Projects"),
+                label="Projects",
                 icon=icons.BOOK_OUTLINED,
                 selected_icon=icons.BOOK_OUTLINED
             ),
             NavigationRailDestination(
-                label_content=Text("Members"),
-                label="Members",
+                label_content=Text("Shared"),
+                label="Shared",
                 icon=icons.PERSON,
                 selected_icon=icons.PERSON
             ),
@@ -95,7 +95,7 @@ class Sidebar(UserControl):
         return self.view
 
     def sync_board_destinations(self):
-        boards = self.store.get_boards()
+        boards = self.store.get_projects()
         self.bottom_nav_rail.destinations = []
         for i in range(len(boards)):
             b = boards[i]
@@ -132,9 +132,9 @@ class Sidebar(UserControl):
         e.control.update()
 
     def board_name_blur(self, e):
-        self.store.update_board(self.store.get_boards()[e.control.data], {
+        self.store.update_project(self.store.get_projects()[e.control.data], {
             'name': e.control.value})
-        self.app_layout.hydrate_all_boards_view()
+        self.app_layout.hydrate_all_projects_view()
         e.control.read_only = True
         e.control.border = "none"
         self.page.update()
@@ -145,9 +145,9 @@ class Sidebar(UserControl):
         self.top_nav_rail.selected_index = index
         self.view.update()
         if index == 0:
-            self.page.route = "/boards"
+            self.page.route = "/Projects"
         elif index == 1:
-            self.page.route = "/members"
+            self.page.route = "/Shared"
         self.page.update()
 
     def bottom_nav_change(self, e):

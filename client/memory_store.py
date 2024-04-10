@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from board import Board
+    from appproject import AppProject
     from board_list import BoardList
     from user import User
     from item import Item
@@ -9,25 +9,25 @@ from data_store import DataStore
 
 class InMemoryStore(DataStore):
     def __init__(self):
-        self.boards: dict[int, "Board"] = {}
+        self.boards: dict[int, "AppProject"] = {}
         self.users: dict[str, "User"] = {}
         self.board_lists: dict[int, list["BoardList"]] = {}
         self.items: dict[int, list["Item"]] = {}
 
-    def add_board(self, board: "Board"):
+    def add_project(self, board: "AppProject"):
         self.boards[board.board_id] = board
 
-    def get_board(self, id: int):
+    def get_project(self, id: int):
         return self.boards[id]
 
-    def update_board(self, board: "Board", update: dict):
+    def update_project(self, board: "AppProject", update: dict):
         for k in update:
             setattr(board, k, update[k])
 
-    def get_boards(self):
+    def get_projects(self):
         return [self.boards[b] for b in self.boards]
 
-    def remove_board(self, board: "Board"):
+    def remove_project(self, board: "AppProject"):
         del self.boards[board.board_id]
         self.board_lists[board.board_id] = []
 
