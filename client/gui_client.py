@@ -44,10 +44,15 @@ class ClientApp(UserControl):
         self.boards = self.own_projects_store.get_projects()
         self.user = ""
         self.login_profile_button = PopupMenuItem(text="Log in", on_click=self.login_popup)
+        self.sign_up_button = PopupMenuItem(text="Sign up", on_click=self.sign_up)
+        self.delete_profile_button = PopupMenuItem(
+                text="Delete Profile",
+                on_click=self.delete_profile
+            )
         self.appbar_items = [
             self.login_profile_button,
             PopupMenuItem(),  # divider
-            PopupMenuItem(text="Settings"),
+            self.sign_up_button,
         ]
         self.appbar = AppBar(
             leading=Icon(icons.GRID_GOLDENRATIO_ROUNDED),
@@ -98,6 +103,63 @@ class ClientApp(UserControl):
         #     self.create_new_board("My First Board")
         self.page.go("/")
 
+    def sign_up(self, e):
+        def close_dlg(e):
+            session_id = call_endpoints.get_cached_session_id()
+            if not (session_id is None):
+                call_endpoints.logout(session_id)
+            if user_name.value == "":
+                user_name.error_text = "Please provide username"
+                self.page.update()
+                return
+            user_name.error_text = ""
+            if password.value == "":
+                password.error_text = "Please provide password"
+                self.page.update()
+                return
+            user = User(user_name.value, password.value)
+            ok, message = call_endpoints.sign_up(user.name, user.password)
+            if not ok:
+                user_name.error_text = message
+                password.error_text = message
+                self.page.update()
+                return
+            else:
+                if user not in self.own_projects_store.get_users():
+                    self.own_projects_store.add_user(user)
+                self.user = user_name.value
+                self.page.client_storage.set("current_user", user_name.value)
+
+            dialog.open = False
+            self.appbar_items[0] = PopupMenuItem(
+                text=f"{self.page.client_storage.get('current_user')}'s Profile",
+                on_click=self.logout_popup
+            )
+            self.appbar_items[2] = PopupMenuItem(
+                text="Delete Profile",
+                on_click=self.delete_profile
+            )
+            self.update_projects()
+            self.page.update()
+
+        user_name = TextField(label="User name", on_submit=close_dlg)
+        password = TextField(label="Password", password=True, on_submit=close_dlg)
+        dialog = AlertDialog(
+            title=Text("Sign up"),
+            content=Column(
+                [
+                    user_name,
+                    password,
+                    ElevatedButton(text="Sign up", on_click=close_dlg),
+                ],
+                tight=True,
+            ),
+            on_dismiss=lambda e: print("Modal dialog dismissed!"),
+        )
+        self.page.dialog = dialog
+        dialog.open = True
+        self.page.update()
+
     def login_popup(self, e):
         def close_dlg(e):
             session_id = call_endpoints.get_cached_session_id()
@@ -130,6 +192,7 @@ class ClientApp(UserControl):
                 text=f"{self.page.client_storage.get('current_user')}'s Profile",
                 on_click=self.logout_popup
             )
+            self.appbar_items[2] = self.delete_profile_button
             self.update_projects()
             self.page.update()
 
@@ -142,6 +205,34 @@ class ClientApp(UserControl):
                     user_name,
                     password,
                     ElevatedButton(text="Login", on_click=close_dlg),
+                ],
+                tight=True,
+            ),
+            on_dismiss=lambda e: print("Modal dialog dismissed!"),
+        )
+        self.page.dialog = dialog
+        dialog.open = True
+        self.page.update()
+
+    def delete_profile(self, e):
+        def close_dlg(e):
+            dialog.open = False
+            ok, msg = call_endpoints.delete_user(call_endpoints.current_session_id)
+            self.logout()
+            # self.update()
+            # self.pop_error(msg)
+
+        def close(e):
+            dialog.open = False
+            self.update()
+            self.page.update()
+
+        dialog = AlertDialog(
+            title=Text("are you sure you want to deactivate account?"),
+            content=Column(
+                [
+                    ElevatedButton(text="close", on_click=close),
+                    ElevatedButton(text="Deactivate", on_click=close_dlg, color=colors.RED_ACCENT),
                 ],
                 tight=True,
             ),
@@ -174,9 +265,12 @@ class ClientApp(UserControl):
         call_endpoints.logout(call_endpoints.current_session_id)
         call_endpoints.cache_session_id(None)
         self.appbar_items[0] = self.login_profile_button
+        self.appbar_items[2] = self.sign_up_button
         self.update_projects()
         self.layout.hydrate_all_projects_view()
         self.layout.active_view.update()
+        self.update()
+        self.page.update()
 
     def route_change(self, e):
         troute = TemplateRoute(self.page.route)
