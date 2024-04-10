@@ -267,6 +267,7 @@ class ClientApp(UserControl):
         self.appbar_items[0] = self.login_profile_button
         self.appbar_items[2] = self.sign_up_button
         self.update_projects()
+        self.layout.set_projects_view()
         self.layout.hydrate_all_projects_view()
         self.layout.active_view.update()
         self.update()
