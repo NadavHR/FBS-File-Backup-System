@@ -42,7 +42,7 @@ class InMemoryStore(DataStore):
 
     def remove_list(self, board: int, id: int):
         self.board_lists[board] = [
-            l for l in self.board_lists[board] if not l.board_list_id == id]
+            l for l in self.board_lists[board] if not l.commit_id == id]
 
     def add_user(self, user: "User"):
         self.users[user.name] = user

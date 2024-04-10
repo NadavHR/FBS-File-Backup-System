@@ -135,6 +135,7 @@ class AppLayout(Row):
 
     def set_board_view(self, i):
         self.active_view = self.store_own.get_projects()[i]
+        self.active_view.update_commits()
         self.sidebar.bottom_nav_rail.selected_index = i
         self.sidebar.top_nav_rail.selected_index = None
         self.sidebar.update()

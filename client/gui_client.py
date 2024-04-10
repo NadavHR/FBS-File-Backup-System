@@ -31,10 +31,7 @@ from flet import (
 )
 from memory_store import InMemoryStore
 from app_user import User
-
-SHARED_PROJECTS_FIELD = "shared"
-OWN_PROJECTS_FIELD = "projects"
-SESSION_EXPIRED_MESSAGE = "expired or illegal session ID"
+from app_consts import *
 
 
 class ClientApp(UserControl):
@@ -136,8 +133,8 @@ class ClientApp(UserControl):
             self.update_projects()
             self.page.update()
 
-        user_name = TextField(label="User name")
-        password = TextField(label="Password", password=True)
+        user_name = TextField(label="User name", on_submit=close_dlg)
+        password = TextField(label="Password", password=True, on_submit=close_dlg)
         dialog = AlertDialog(
             title=Text("Please enter your login credentials"),
             content=Column(
@@ -195,6 +192,16 @@ class ClientApp(UserControl):
         elif troute.match("/Shared"):
             self.layout.set_shared_view()
         self.page.update()
+
+    def pop_error(self, error: str):
+        def close(e):
+            dialog.open = False
+            self.page.update()
+        dialog = AlertDialog(title=Text(error))
+        self.page.dialog = dialog
+        dialog.open = True
+        self.page.update()
+
 
     def add_project(self, e):
         def submit_data(e):
@@ -276,10 +283,6 @@ class ClientApp(UserControl):
 
     def check_project_info(self, e):
         project_name = e.control.content.data.name
-        SHARED_WITH_FIELD = "shared_with"
-        COMMIT_COUNT_FIELD = "commit_count"
-        DESCRIPTION_FIELD = "description"
-        TIME_FIELD = "time"
 
         def close(e):
             dialog.open = False

@@ -1,6 +1,6 @@
 import json
 import requests
-import file_utils
+import client.file_utils as file_utils
 
 URL = "http://127.0.0.1:7112"
 SUCCESS_FIELD = "success"
