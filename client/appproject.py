@@ -22,7 +22,7 @@ from flet import (
     alignment,
     margin
 )
-from board_list import BoardList
+from board_list import AppCommit
 from data_store import DataStore
 from app_consts import *
 
@@ -80,6 +80,9 @@ class AppProject(UserControl):
 
     def create_list(self, e):
         def close_dlg(e):
+            create_button.disabled = True
+            self.page.update()
+            self.update()
             if (hasattr(e.control, "text") and not e.control.text == "Cancel") or (type(e.control) is TextField and e.control.value != ""):
                 if os.path.isdir(path_field.value):
                     ok, msg = call_endpoints.commit(call_endpoints.current_session_id,
@@ -139,18 +142,27 @@ class AppProject(UserControl):
         self.page.update()
         name_field.focus()
 
-    def remove_list(self, list: BoardList, e):
-        self.board_lists.remove(list)
-        self.store.remove_list(self.board_id, list.commit_id)
+    def remove_commit(self, commit: AppCommit, e):
+        self.board_lists.remove(commit)
+        self.store.remove_list(self.board_id, commit.commit_id)
+        self.page.update()
         self.update()
 
-    def add_list(self, list: BoardList):
+    def delete_commit(self, commit: AppCommit, e):
+        ok, msg = call_endpoints.delete_commit(call_endpoints.current_session_id, self.name, commit.commit_id)
+        if not ok:
+            self.app.pop_error(msg)
+        self.update_commits()
+        self.page.update()
+        self.update()
+
+    def add_list(self, list: AppCommit):
         self.board_lists.insert(1, list)
         self.store.add_list(self.board_id, list)
 
     def update_commits(self):
         for i in self.board_lists[1:]:
-            self.remove_list(i, None)
+            self.remove_commit(i, None)
         ok, msg = call_endpoints.get_project_info(call_endpoints.current_session_id, self.name, self.owner_name)
         if ok:
             for i in range(msg[COMMIT_COUNT_FIELD]):
@@ -161,11 +173,11 @@ class AppProject(UserControl):
                     i
                 )
                 if ok:
-                    self.add_list(BoardList(self,
+                    self.add_list(AppCommit(self,
                                             self.store,
                                             commit_info[COMMIT_NAME_FIELD],
                                             description=commit_info[COMMIT_MESSAGE_FIELD],
-                                            commit_id=i),)
+                                            commit_id=i), )
                 else:
                     self.app.pop_error(commit_info)
 

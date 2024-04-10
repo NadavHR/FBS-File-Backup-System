@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from appproject import AppProject
-    from board_list import BoardList
+    from board_list import AppCommit
     from user import User
     from item import Item
 
@@ -38,13 +38,13 @@ class DataStore:
     def add_list(self, board, model) -> None:
         raise NotImplementedError
 
-    def get_lists(self) -> list["BoardList"]:
+    def get_lists(self) -> list["AppCommit"]:
         raise NotImplementedError
 
-    def get_list(self, id) -> "BoardList":
+    def get_list(self, id) -> "AppCommit":
         raise NotImplementedError
 
-    def get_lists_by_board(self, board) -> list["BoardList"]:
+    def get_lists_by_board(self, board) -> list["AppCommit"]:
         raise NotImplementedError
 
     def remove_list(self, board, id) -> None:

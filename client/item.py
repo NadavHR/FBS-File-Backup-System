@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from board_list import BoardList
+    from board_list import AppCommit
 import itertools
 from flet import (
     DragTarget,
@@ -18,7 +18,7 @@ from data_store import DataStore
 class Item(UserControl):
     id_counter = itertools.count()
 
-    def __init__(self, list: "BoardList", store: DataStore, item_text: str):
+    def __init__(self, list: "AppCommit", store: DataStore, item_text: str):
         super().__init__()
         self.item_id = next(Item.id_counter)
         self.store: DataStore = store

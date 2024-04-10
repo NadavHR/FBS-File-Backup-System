@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from appproject import AppProject
-    from board_list import BoardList
+    from board_list import AppCommit
     from user import User
     from item import Item
 from data_store import DataStore
@@ -11,7 +11,7 @@ class InMemoryStore(DataStore):
     def __init__(self):
         self.boards: dict[int, "AppProject"] = {}
         self.users: dict[str, "User"] = {}
-        self.board_lists: dict[int, list["BoardList"]] = {}
+        self.board_lists: dict[int, list["AppCommit"]] = {}
         self.items: dict[int, list["Item"]] = {}
 
     def add_project(self, board: "AppProject"):
@@ -31,7 +31,7 @@ class InMemoryStore(DataStore):
         del self.boards[board.board_id]
         self.board_lists[board.board_id] = []
 
-    def add_list(self, board: int, list: "BoardList"):
+    def add_list(self, board: int, list: "AppCommit"):
         if board in self.board_lists:
             self.board_lists[board].append(list)
         else:

@@ -25,7 +25,7 @@ from flet import (
 from data_store import DataStore
 
 
-class BoardList(UserControl):
+class AppCommit(UserControl):
     id_counter = itertools.count()
 
     def __init__(self, project: "AppProject", store: DataStore, title: str, color: str = "", description: str = "",
@@ -92,7 +92,7 @@ class BoardList(UserControl):
         return self.view
 
     def delete_list(self, e):
-        self.project.remove_list(self, e)
+        self.project.delete_commit(self, e)
 
     def edit_title(self, e):
         pass
