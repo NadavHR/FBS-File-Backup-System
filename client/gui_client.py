@@ -220,7 +220,7 @@ class ClientApp(UserControl):
             ok, msg = call_endpoints.delete_user(call_endpoints.current_session_id)
             self.logout()
             # self.update()
-            # self.pop_error(msg)
+            self.pop_error(msg)
 
         def close(e):
             dialog.open = False
@@ -296,6 +296,15 @@ class ClientApp(UserControl):
         dialog.open = True
         self.page.update()
 
+    def pop_message(self, title: str, message: UserControl):
+        def close(e):
+            dialog.open = False
+            self.page.update()
+        dialog = AlertDialog(title=Text(title),
+            content=message)
+        self.page.dialog = dialog
+        dialog.open = True
+        self.page.update()
 
     def add_project(self, e):
         def submit_data(e):
@@ -527,6 +536,7 @@ class ClientApp(UserControl):
                 self.logout()
         # self.layout.hydrate_all_projects_view()
         self.page.update()
+
 
 
 def main(page: Page):
