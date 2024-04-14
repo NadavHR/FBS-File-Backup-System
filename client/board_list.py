@@ -57,7 +57,8 @@ class AppCommit(UserControl):
                             PopupMenuItem(
                                 content=Text(value="Delete", style="labelMedium",
                                              text_align="center", color=colors.WHITE),
-                                on_click=self.delete_list),
+                                             on_click=self.delete_commit,
+                                             disabled=self.is_shared()),
                             PopupMenuItem(),
                             PopupMenuItem(
                                 content=Text(value="Info", style="labelMedium",
@@ -109,7 +110,10 @@ class AppCommit(UserControl):
         else:
             self.project.app.pop_error(msg)
 
-    def delete_list(self, e):
+    def is_shared(self) -> bool:
+        return not (self.project.owner_name == self.project.app.user)
+
+    def delete_commit(self, e):
         self.project.delete_commit(self, e)
 
     def edit_title(self, e):
