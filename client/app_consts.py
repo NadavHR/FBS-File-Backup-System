@@ -8,3 +8,4 @@ TIME_FIELD = "time"
 COMMIT_NAME_FIELD = "name"
 COMMIT_USER_FIELD = "user"
 COMMIT_MESSAGE_FIELD = "message"
+COMMIT_SIZE_LIMIT = 64000000  # the maximum size of commit data (64mb)

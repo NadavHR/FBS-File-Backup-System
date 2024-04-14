@@ -1,4 +1,7 @@
 import json
+import os
+from typing import Callable
+import app_consts
 import requests
 import client.file_utils as file_utils
 
@@ -177,6 +180,13 @@ def commit(session_id: int, project_name: str, project_owner: str, commit_name: 
               COMMIT_NAME_FIELD: encode(commit_name),
               COMMIT_MESSAGE_FIELD: encode(commit_message)
               }
+    size = 0
+    for path, dirs, files in os.walk(path_to_data):
+        for f in files:
+            fp = os.path.join(path, f)
+            size += os.path.getsize(fp)
+            if size >= app_consts.COMMIT_SIZE_LIMIT:
+                return False, "Folder Size too big"
 
     resp = requests.post(url=f"{URL}/commit", params=params,
                          json={COMMIT_DATA_FIELD: encode(file_utils.compress_and_encode(path_to_data))}).json()

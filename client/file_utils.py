@@ -2,6 +2,7 @@ import base64
 import io
 import os
 import zipfile
+from typing import Callable
 
 
 def decode(data: str) -> bytes:
@@ -54,6 +55,7 @@ def compress(path: str) -> bytes:
     """
     buffer = io.BytesIO()
     ziph = zipfile.ZipFile(buffer, "w",  zipfile.ZIP_DEFLATED)
+
     for root, dirs, files in os.walk(path):
         for file in files:
             ziph.write(os.path.join(root, file),

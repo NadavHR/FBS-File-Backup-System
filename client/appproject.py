@@ -37,7 +37,7 @@ class AppProject(UserControl):
         self.name = name
         self.owner_name = owner
         self.add_list_button = FloatingActionButton(
-            icon=icons.ADD, text="new commit", height=30, on_click=self.create_list)
+            icon=icons.ADD, text="new commit", height=30, on_click=self.create_commit)
 
         self.board_lists = [
             self.add_list_button
@@ -136,9 +136,8 @@ class AppProject(UserControl):
         self.page.dialog = dialog
         dialog.open = True
         self.page.update()
-        name_field.focus()
 
-    def create_list(self, e):
+    def create_commit(self, e):
         def close_dlg(e):
             create_button.disabled = True
             self.page.update()

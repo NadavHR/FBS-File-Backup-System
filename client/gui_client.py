@@ -278,10 +278,11 @@ class ClientApp(UserControl):
         if troute.match("/"):
             self.page.go("/Projects")
         elif troute.match("/board/:id"):
-            if int(troute.id) > len(self.own_projects_store.get_projects()):
+            if int(troute.id) > len(self.own_projects_store.get_projects()) + \
+                                len(self.shared_projects_store.get_projects()):
                 self.page.go("/")
                 return
-            self.layout.set_board_view(int(troute.id))
+            self.layout.set_project_view(int(troute.id))
         elif troute.match("/Projects"):
             self.layout.set_projects_view()
         elif troute.match("/Shared"):

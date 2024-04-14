@@ -39,7 +39,7 @@ class AppLayout(Row):
             selected_icon=icons.ARROW_CIRCLE_RIGHT,
             on_click=self.toggle_nav_rail,
         )
-        self.sidebar = Sidebar(self, self.store_own, page)
+        self.sidebar = Sidebar(self, self.store_own, page, self.store_shared)
         self.login_for_projects_message = Row([Text("log in to view projects")])
         self.no_projects_message = Row([Text("No Projects to Display")])
         self.shared_view = Column(
@@ -72,7 +72,7 @@ class AppLayout(Row):
             ],
             expand=True,
         )
-        #Text("Shared Projects")
+        # Text("Shared Projects")
         self.projects_view = Column(
             [
                 Row(
@@ -130,11 +130,14 @@ class AppLayout(Row):
     def active_view(self, view):
         self._active_view = view
         self.controls[-1] = self._active_view
-        self.sidebar.sync_board_destinations()
+        self.sidebar.sync_project_destinations()
         self.update()
 
-    def set_board_view(self, i):
-        self.active_view = self.store_own.get_projects()[i]
+    def set_project_view(self, i):
+        if i < len(self.store_own.get_projects()):
+            self.active_view = self.store_own.get_projects()[i]
+        else:
+            self.active_view = self.store_shared.get_projects()[i - len(self.store_own.get_projects())]
         self.active_view.update_commits()
         self.sidebar.bottom_nav_rail.selected_index = i
         self.sidebar.top_nav_rail.selected_index = None
@@ -177,7 +180,7 @@ class AppLayout(Row):
                                 content=Text(value=b.name),
                                 data=b,
                                 expand=True,
-                                on_click=self.board_click,
+                                on_click=self.project_click,
                             ),
                             Container(
                                 content=PopupMenuButton(
@@ -240,12 +243,12 @@ class AppLayout(Row):
                                 content=Text(value=b.name),
                                 data=b,
                                 expand=True,
-                                on_click=self.board_click,
+                                on_click=self.project_click,
                             ),
                             Container(
                                 content=PopupMenuButton(
-                                        items=[
-                                            PopupMenuItem(
+                                    items=[
+                                        PopupMenuItem(
                                             content=Text(
                                                 value="Check Info",
                                                 style="labelMedium",
@@ -254,7 +257,7 @@ class AppLayout(Row):
                                             ),
                                             on_click=self.app.check_project_info,
                                         ),
-                                        ]
+                                    ]
                                 )
                             )
                         ],
@@ -280,11 +283,14 @@ class AppLayout(Row):
                 self.projects_view.controls[-1] = self.no_projects_message
             if len(self.store_shared.get_projects()) == 0:
                 self.shared_view.controls[-1] = self.no_projects_message
-        self.sidebar.sync_board_destinations()
+        self.sidebar.sync_project_destinations()
 
-
-    def board_click(self, e):
-        self.sidebar.bottom_nav_change(self.store_own.get_projects().index(e.control.data))
+    def project_click(self, e):
+        if e.control.data.store is self.store_shared:
+            self.sidebar.bottom_nav_change(e.control.data.store.get_projects().index(e.control.data) +
+                                           len(self.store_own.get_projects()))
+        else:
+            self.sidebar.bottom_nav_change(e.control.data.store.get_projects().index(e.control.data))
 
     def toggle_nav_rail(self, e):
         self.sidebar.visible = not self.sidebar.visible

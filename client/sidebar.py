@@ -21,9 +21,10 @@ from data_store import DataStore
 
 class Sidebar(UserControl):
 
-    def __init__(self, app_layout, store: DataStore, page):
+    def __init__(self, app_layout, store_own: DataStore, page, store_shared: DataStore):
         super().__init__()
-        self.store: DataStore = store
+        self.store_own: DataStore = store_own
+        self.store_shared: DataStore = store_shared
         self.app_layout = app_layout
         self.nav_rail_visible = True
         self.top_nav_items = [
@@ -94,15 +95,40 @@ class Sidebar(UserControl):
         )
         return self.view
 
-    def sync_board_destinations(self):
-        boards = self.store.get_projects()
+    def sync_project_destinations(self):
+        projects = self.store_own.get_projects()
         self.bottom_nav_rail.destinations = []
-        for i in range(len(boards)):
-            b = boards[i]
+        for i in range(len(projects)):
+            b = projects[i]
             self.bottom_nav_rail.destinations.append(
                 NavigationRailDestination(
                     label_content=TextField(
                         value=b.name,
+                        hint_text=b.name,
+                        text_size=12,
+                        read_only=True,
+                        on_focus=self.board_name_focus,
+                        on_blur=self.board_name_blur,
+                        border="none",
+                        height=50,
+                        width=150,
+                        text_align="start",
+                        data=i
+                    ),
+                    label=b.name,
+                    selected_icon=icons.CHEVRON_RIGHT_ROUNDED,
+                    icon=icons.CHEVRON_RIGHT_OUTLINED
+                )
+            )
+
+        shared = self.store_shared.get_projects()
+        for i in range(len(shared)):
+            b = shared[i]
+            self.bottom_nav_rail.destinations.append(
+                NavigationRailDestination(
+                    label_content=TextField(
+                        value=f"{b.owner_name}/{b.name}",
+                        color=colors.GREEN_ACCENT,
                         hint_text=b.name,
                         text_size=12,
                         read_only=True,
@@ -127,17 +153,19 @@ class Sidebar(UserControl):
         self.page.update()
 
     def board_name_focus(self, e):
-        e.control.read_only = False
-        e.control.border = "outline"
-        e.control.update()
+        pass
+        e.control.read_only = True
+        # e.control.border = "outline"
+        # e.control.update()
 
     def board_name_blur(self, e):
-        self.store.update_project(self.store.get_projects()[e.control.data], {
-            'name': e.control.value})
-        self.app_layout.hydrate_all_projects_view()
-        e.control.read_only = True
-        e.control.border = "none"
-        self.page.update()
+        pass
+        # self.store_own.update_project(self.store_own.get_projects()[e.control.data], {
+        #     'name': e.control.value})
+        # self.app_layout.hydrate_all_projects_view()
+        # e.control.read_only = True
+        # e.control.border = "none"
+        # self.page.update()
 
     def top_nav_change(self, e):
         index = e if (type(e) == int) else e.control.selected_index
