@@ -3,7 +3,6 @@ import os
 import unittest
 import client.file_utils as file_utils
 import client.call_endpoints as endpoints
-import communication_manager
 
 user_name = "new user"
 password = "password123"
@@ -135,17 +134,9 @@ class MyTestCase(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
 if __name__ == '__main__':
-    proc = multiprocessing.Process(target=communication_manager.main, args=())
-    proc.start()
+    # proc = multiprocessing.Process(target=communication_manager.main, args=())
+    # proc.start()
     unittest.main()
-    proc.terminate()
+    # proc.terminate()
 
