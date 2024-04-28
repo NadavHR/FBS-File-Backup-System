@@ -63,7 +63,10 @@ class Session(constants.Constants):
         checks if a session is valid, DOES NOT EXPIRE INVALID SESSIONS BY ITSELF
         :return: True if the session is valid, false otherwise
         """
-        return ((self.start_time + Session.SESSION_LIFETIME_SECONDS) > time.time()) and (self.is_session(self.id))
+        valid = ((self.start_time + Session.SESSION_LIFETIME_SECONDS) > time.time()) and (self.is_session(self.id))
+        if valid:
+            self.refresh()
+        return valid
 
     def get_session_user(self) -> str:
         """
