@@ -3,6 +3,5 @@ tests/data_save_test/*
 */__pycache__/*
 __pycache__/*
 *.pyc
-__pycache__/project_class.cpython-39.pyc
 /__pycache__
 */session_id_cache.txt

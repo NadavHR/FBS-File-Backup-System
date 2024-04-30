@@ -1,8 +1,11 @@
 import base64
 import hashlib
 import json
+import getpass
+import socket
 
 import uvicorn
+import zeroconf
 from fastapi import FastAPI, Request
 
 import constants
@@ -131,7 +134,18 @@ def update_project_sharing(session_id: int, project_name: str, user_name: str, w
 
 
 def main():
-    uvicorn.run(app, host="127.0.0.1", port=constants.Constants.COMMUNICATION_PORT)
+    conf = zeroconf.Zeroconf(ip_version=zeroconf.IPVersion.All)
+    info = zeroconf.ServiceInfo(
+        "_http._tcp.local.",
+        "FBS-server._http._tcp.local.",
+        port=constants.Constants.COMMUNICATION_PORT,
+        addresses=[socket.inet_aton(socket.gethostbyname(socket.gethostname()))],
+        server="FBS-server.local."
+        )
+    conf.unregister_all_services()
+    conf.register_service(info)
+
+    uvicorn.run(app, host="0.0.0.0", port=constants.Constants.COMMUNICATION_PORT)
 
 
 if __name__ == '__main__':

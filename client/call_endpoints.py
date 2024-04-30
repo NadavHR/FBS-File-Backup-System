@@ -1,10 +1,11 @@
 import json
 import os
+import socket
 import app_consts
 import requests
-import client.file_utils as file_utils
+import file_utils
 
-URL = "http://127.0.0.1:7112"
+URL = f"http://{socket.gethostbyname('FBS-server.local')}:80"
 SUCCESS_FIELD = "success"
 MSG_FIELD = "message"
 

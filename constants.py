@@ -90,4 +90,4 @@ class Constants:
 
     SESSION_LIFETIME_SECONDS = 3600  # the amount of time (in seconds) a session has to live
 
-    COMMUNICATION_PORT = 7112
+    COMMUNICATION_PORT = 80 #7112
