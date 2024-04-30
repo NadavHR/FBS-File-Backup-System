@@ -2,7 +2,6 @@ import base64
 import io
 import os
 import zipfile
-from typing import Callable
 
 
 def decode(data: str) -> bytes:
