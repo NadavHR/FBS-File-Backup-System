@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from appproject import AppProject
-    from board_list import AppCommit
+    from app_project import AppProject
+    from app_commit import AppCommit
     from user import User
-    from item import Item
 
 
 class DataStore:
@@ -35,7 +34,7 @@ class DataStore:
     def remove_user(self, id) -> None:
         raise NotImplementedError
 
-    def add_list(self, board, model) -> None:
+    def add_commit(self, board, model) -> None:
         raise NotImplementedError
 
     def get_lists(self) -> list["AppCommit"]:
@@ -44,23 +43,8 @@ class DataStore:
     def get_list(self, id) -> "AppCommit":
         raise NotImplementedError
 
-    def get_lists_by_board(self, board) -> list["AppCommit"]:
+    def get_commits_by_project(self, board) -> list["AppCommit"]:
         raise NotImplementedError
 
-    def remove_list(self, board, id) -> None:
-        raise NotImplementedError
-
-    def add_item(self, board_list, model) -> None:
-        raise NotImplementedError
-
-    def get_items(self, board_list) -> list["Item"]:
-        raise NotImplementedError
-
-    def get_item(self, id) -> "Item":
-        raise NotImplementedError
-
-    def get_items_by_board(self, board) -> list["Item"]:
-        raise NotImplementedError
-
-    def remove_item(self, board_list, id) -> None:
+    def remove_commit(self, board, id) -> None:
         raise NotImplementedError

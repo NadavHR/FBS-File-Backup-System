@@ -22,7 +22,7 @@ from flet import (
     alignment,
     margin
 )
-from board_list import AppCommit
+from app_commit import AppCommit
 from data_store import DataStore
 from app_consts import *
 
@@ -31,22 +31,22 @@ class AppProject(UserControl):
 
     def __init__(self, app, store: DataStore, name: str, owner: str):
         super().__init__()
-        self.board_id = next(AppProject.id_counter)
+        self.project_id = next(AppProject.id_counter)
         self.store: DataStore = store
         self.app = app
         self.name = name
         self.owner_name = owner
-        self.add_list_button = FloatingActionButton(
+        self.add_commit_button = FloatingActionButton(
             icon=icons.ADD, text="new commit", height=30, on_click=self.create_commit)
 
-        self.board_lists = [
-            self.add_list_button
+        self.project_commits = [
+            self.add_commit_button
         ]
-        for l in self.store.get_lists_by_board(self.board_id):
-            self.add_list(l)
+        for c in self.store.get_commits_by_project(self.project_id):
+            self.add_commit(c)
 
-        self.list_wrap = Column(
-            self.board_lists,
+        self.commit_wrap = Column(
+            self.project_commits,
             # vertical_alignment="start",
             visible=True,
             scroll="auto",
@@ -58,7 +58,7 @@ class AppProject(UserControl):
         self.view = Container(
             content=Column(
                 controls=[
-                    self.list_wrap
+                    self.commit_wrap
                 ],
 
                 scroll="auto",
@@ -72,10 +72,10 @@ class AppProject(UserControl):
         return self.view
 
     def resize(self, nav_rail_extended, width, height):
-        self.list_wrap.width = (
+        self.commit_wrap.width = (
             width - 310) if nav_rail_extended else (width - 50)
         self.view.height = height
-        self.list_wrap.update()
+        self.commit_wrap.update()
         self.view.update()
 
     def save_commit(self, commit_id: int):
@@ -202,8 +202,8 @@ class AppProject(UserControl):
         name_field.focus()
 
     def remove_commit(self, commit: AppCommit, e):
-        self.board_lists.remove(commit)
-        self.store.remove_list(self.board_id, commit.commit_id)
+        self.project_commits.remove(commit)
+        self.store.remove_commit(self.project_id, commit.commit_id)
         self.page.update()
         self.update()
 
@@ -215,12 +215,12 @@ class AppProject(UserControl):
         self.page.update()
         self.update()
 
-    def add_list(self, list: AppCommit):
-        self.board_lists.insert(1, list)
-        self.store.add_list(self.board_id, list)
+    def add_commit(self, commit: AppCommit):
+        self.project_commits.insert(1, commit)
+        self.store.add_commit(self.project_id, commit)
 
     def update_commits(self):
-        for i in self.board_lists[1:]:
+        for i in self.project_commits[1:]:
             self.remove_commit(i, None)
         ok, msg = call_endpoints.get_project_info(call_endpoints.current_session_id, self.name, self.owner_name)
         if ok:
@@ -232,11 +232,11 @@ class AppProject(UserControl):
                     i
                 )
                 if ok:
-                    self.add_list(AppCommit(self,
-                                            self.store,
-                                            commit_info[COMMIT_NAME_FIELD],
-                                            description=commit_info[COMMIT_MESSAGE_FIELD],
-                                            commit_id=i), )
+                    self.add_commit(AppCommit(self,
+                                              self.store,
+                                              commit_info[COMMIT_NAME_FIELD],
+                                              description=commit_info[COMMIT_MESSAGE_FIELD],
+                                              commit_id=i), )
                 else:
                     self.app.pop_error(commit_info)
 

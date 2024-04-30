@@ -1,4 +1,4 @@
-from appproject import AppProject
+from app_project import AppProject
 import call_endpoints
 from data_store import DataStore
 from flet import (

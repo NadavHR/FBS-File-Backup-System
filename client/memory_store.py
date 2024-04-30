@@ -1,64 +1,49 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from appproject import AppProject
-    from board_list import AppCommit
+    from app_project import AppProject
+    from app_commit import AppCommit
     from user import User
-    from item import Item
 from data_store import DataStore
 
 
 class InMemoryStore(DataStore):
     def __init__(self):
-        self.boards: dict[int, "AppProject"] = {}
+        self.projects: dict[int, "AppProject"] = {}
         self.users: dict[str, "User"] = {}
-        self.board_lists: dict[int, list["AppCommit"]] = {}
-        self.items: dict[int, list["Item"]] = {}
+        self.commits: dict[int, list["AppCommit"]] = {}
 
     def add_project(self, board: "AppProject"):
-        self.boards[board.board_id] = board
+        self.projects[board.project_id] = board
 
     def get_project(self, id: int):
-        return self.boards[id]
+        return self.projects[id]
 
     def update_project(self, board: "AppProject", update: dict):
         for k in update:
             setattr(board, k, update[k])
 
     def get_projects(self):
-        return [self.boards[b] for b in self.boards]
+        return [self.projects[b] for b in self.projects]
 
     def remove_project(self, board: "AppProject"):
-        del self.boards[board.board_id]
-        self.board_lists[board.board_id] = []
+        del self.projects[board.project_id]
+        self.commits[board.project_id] = []
 
-    def add_list(self, board: int, list: "AppCommit"):
-        if board in self.board_lists:
-            self.board_lists[board].append(list)
+    def add_commit(self, board: int, commit: "AppCommit"):
+        if board in self.commits:
+            self.commits[board].append(commit)
         else:
-            self.board_lists[board] = [list]
+            self.commits[board] = [commit]
 
-    def get_lists_by_board(self, board: int):
-        return self.board_lists.get(board, [])
+    def get_commits_by_project(self, board: int):
+        return self.commits.get(board, [])
 
-    def remove_list(self, board: int, id: int):
-        self.board_lists[board] = [
-            l for l in self.board_lists[board] if not l.commit_id == id]
+    def remove_commit(self, board: int, id: int):
+        self.commits[board] = [
+            l for l in self.commits[board] if not l.commit_id == id]
 
     def add_user(self, user: "User"):
         self.users[user.name] = user
 
     def get_users(self):
         return [self.users[u] for u in self.users]
-
-    def add_item(self, board_list: int, item: "Item"):
-        if board_list in self.items:
-            self.items[board_list].append(item)
-        else:
-            self.items[board_list] = [item]
-
-    def get_items(self, board_list: int):
-        return self.items.get(board_list, [])
-
-    def remove_item(self, board_list: int, id: int):
-        self.items[board_list] = [
-            i for i in self.items[board_list] if not i.item_id == id]

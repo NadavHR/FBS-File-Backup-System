@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
-    from appproject import AppProject
+    from app_project import AppProject
 import itertools
 import call_endpoints
 from flet import (
@@ -10,21 +11,17 @@ from flet import (
     Column,
     Row,
     Text,
-    Icon,
     PopupMenuButton,
     PopupMenuItem,
     Container,
-    TextButton,
-    TextField,
-    icons,
     border_radius,
-    alignment,
     border,
     colors,
     padding,
 )
 from data_store import DataStore
 from app_consts import *
+
 
 class AppCommit(UserControl):
     id_counter = itertools.count()
@@ -57,12 +54,12 @@ class AppCommit(UserControl):
                             PopupMenuItem(
                                 content=Text(value="Delete", style="labelMedium",
                                              text_align="center", color=colors.WHITE),
-                                             on_click=self.delete_commit,
-                                             disabled=self.is_shared()),
+                                on_click=self.delete_commit,
+                                disabled=self.is_shared()),
                             PopupMenuItem(),
                             PopupMenuItem(
                                 content=Text(value="Info", style="labelMedium",
-                                             text_align="center", color=colors.WHITE,),
+                                             text_align="center", color=colors.WHITE, ),
                                 on_click=self.show_info),
                         ],
                     ),
@@ -72,8 +69,7 @@ class AppCommit(UserControl):
             alignment="spaceBetween"
 
         )
-
-        self.inner_list = Container(
+        self.commit_description = Container(
             content=Column([
                 self.header,
                 Text(self.description)
@@ -83,12 +79,12 @@ class AppCommit(UserControl):
             border=border.all(2, colors.BLACK12),
             border_radius=border_radius.all(5),
             bgcolor=self.color if (
-                self.color != "") else colors.BACKGROUND,
+                    self.color != "") else colors.BACKGROUND,
             padding=padding.only(
                 bottom=10, right=10, left=10, top=5)
         )
         self.view = DragTarget(
-            content=self.inner_list,
+            content=self.commit_description,
             data=self,
         )
 
@@ -115,10 +111,3 @@ class AppCommit(UserControl):
 
     def delete_commit(self, e):
         self.project.delete_commit(self, e)
-
-    def edit_title(self, e):
-        pass
-
-    def save_title(self, e):
-        pass
-

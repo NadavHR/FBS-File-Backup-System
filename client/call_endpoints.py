@@ -1,6 +1,5 @@
 import json
 import os
-from typing import Callable
 import app_consts
 import requests
 import client.file_utils as file_utils
@@ -53,7 +52,18 @@ def get_cached_session_id() -> int or None:
         return None
 
 
-
+def safe_get_request(url: str, params: dict) -> dict[str: bool, str: str]:
+    """
+    sends a request and returns an error response if the response is not valid
+    :param url: the url to send the request to
+    :param params: the parameters
+    :return: a dict with success and message detailing the requests success
+    """
+    try:
+        resp = requests.get(url=url, params=params).json()
+        return resp
+    except:
+        return {SUCCESS_FIELD: False, MSG_FIELD: "bad request"}
 
 
 def encode(s: str) -> str:
@@ -74,13 +84,12 @@ def login(user_name: str, password: str) -> (bool, int or str):
     """
     params = {USER_NAME_FIELD: encode(user_name),
               PASSWORD_FIELD: encode(password)}
-    resp = (requests.get(url=f"{URL}/login", params=params)).json()
+    resp = safe_get_request(url=f"{URL}/login", params=params)
     if resp[SUCCESS_FIELD]:
         session_id = int(resp[MSG_FIELD])
         cache_session_id(session_id)
         return resp[SUCCESS_FIELD], session_id
     return resp[SUCCESS_FIELD], resp[MSG_FIELD]
-
 
 
 def logout(session_id: int) -> (bool, str):
@@ -89,7 +98,7 @@ def logout(session_id: int) -> (bool, str):
     :param session_id: the id of the session
     :return: boolean and response message
     """
-    resp = requests.get(url=f"{URL}/logout", params={SESSION_ID_FIELD: session_id}).json()
+    resp = safe_get_request(url=f"{URL}/logout", params={SESSION_ID_FIELD: session_id})
     return resp[SUCCESS_FIELD], resp[MSG_FIELD]
 
 
@@ -102,7 +111,7 @@ def sign_up(user_name: str, password: str) -> (bool, int or str):
     """
     params = {USER_NAME_FIELD: encode(user_name),
               PASSWORD_FIELD: encode(password)}
-    resp = (requests.get(url=f"{URL}/sign_up", params=params)).json()
+    resp = safe_get_request(url=f"{URL}/sign_up", params=params)
     if resp[SUCCESS_FIELD]:
         session_id = int(resp[MSG_FIELD])
         cache_session_id(session_id)
@@ -116,7 +125,7 @@ def delete_user(session_id: int) -> (bool, str):
     :param session_id: the id of the session
     :return: boolean and response message
     """
-    resp = requests.get(url=f"{URL}/delete_user", params={SESSION_ID_FIELD: session_id}).json()
+    resp = safe_get_request(url=f"{URL}/delete_user", params={SESSION_ID_FIELD: session_id})
     return resp[SUCCESS_FIELD], resp[MSG_FIELD]
 
 
@@ -135,7 +144,7 @@ def get_commit_info(session_id: int, project_name: str, project_owner: str, comm
         PROJECT_OWNER_FIELD: encode(project_owner),
         COMMIT_ID_FIELD: commit_id
     }
-    resp = requests.get(url=f"{URL}/get_commit_info", params=params).json()
+    resp = safe_get_request(url=f"{URL}/get_commit_info", params=params)
     return resp[SUCCESS_FIELD], (json.loads(resp[MSG_FIELD])) if resp[SUCCESS_FIELD] else resp[MSG_FIELD]
 
 
@@ -156,7 +165,7 @@ bool, bool or str):
         PROJECT_OWNER_FIELD: encode(project_owner),
         COMMIT_ID_FIELD: commit_id
     }
-    resp = requests.get(url=f"{URL}/get_commit_data", params=params).json()
+    resp = safe_get_request(url=f"{URL}/get_commit_data", params=params)
     return resp[SUCCESS_FIELD], file_utils.save_commit_from_data(resp[MSG_FIELD], path) if \
         resp[SUCCESS_FIELD] else resp[MSG_FIELD]
 
@@ -207,7 +216,7 @@ def delete_commit(session_id: int, project_name: str, commit_id: int) -> (bool, 
         PROJECT_NAME_FIELD: encode(project_name),
         COMMIT_ID_FIELD: commit_id
     }
-    resp = requests.get(url=f"{URL}/delete_commit", params=params).json()
+    resp = safe_get_request(url=f"{URL}/delete_commit", params=params)
     return resp[SUCCESS_FIELD], resp[MSG_FIELD]
 
 
@@ -222,7 +231,7 @@ def get_project_info(session_id: int, project_name: str, project_owner: str) -> 
     params = {SESSION_ID_FIELD: session_id,
               PROJECT_NAME_FIELD: encode(project_name),
               PROJECT_OWNER_FIELD: encode(project_owner)}
-    resp = requests.get(url=f"{URL}/get_project_info", params=params).json()
+    resp = safe_get_request(url=f"{URL}/get_project_info", params=params)
     return resp[SUCCESS_FIELD], json.loads(resp[MSG_FIELD]) if resp[SUCCESS_FIELD] else resp[MSG_FIELD]
 
 
@@ -233,7 +242,7 @@ def get_user_projects(session_id: int) -> (bool, dict or str):
     :return: boolean and dict of projects and shared projects or error message
     """
     params = {SESSION_ID_FIELD: session_id}
-    resp = requests.get(url=f"{URL}/get_user_projects", params=params).json()
+    resp = safe_get_request(url=f"{URL}/get_user_projects", params=params)
     return resp[SUCCESS_FIELD], json.loads(resp[MSG_FIELD]) if resp[SUCCESS_FIELD] else resp[MSG_FIELD]
 
 
@@ -250,7 +259,7 @@ def add_project(session_id: int, project_name: str, project_description: str) ->
         PROJECT_NAME_FIELD: encode(project_name),
         PROJECT_DESCRIPTION_FIELD: encode(project_description)
     }
-    resp = requests.get(url=f"{URL}/add_project", params=params).json()
+    resp = safe_get_request(url=f"{URL}/add_project", params=params)
     return resp[SUCCESS_FIELD], resp[MSG_FIELD]
 
 
@@ -263,7 +272,7 @@ def delete_project(session_id: int, project_name: str) -> (bool, str):
     """
     params = {SESSION_ID_FIELD: session_id,
               PROJECT_NAME_FIELD: encode(project_name)}
-    resp = requests.get(url=f"{URL}/delete_project", params=params).json()
+    resp = safe_get_request(url=f"{URL}/delete_project", params=params)
     return resp[SUCCESS_FIELD], resp[MSG_FIELD]
 
 
@@ -281,5 +290,5 @@ def update_project_sharing(session_id: int, project_name: str, user_name: str, w
               USER_NAME_FIELD: encode(user_name)}
     if not (write is None):
         params[WRITE_PERMISSION_FIELD] = write
-    resp = requests.get(url=f"{URL}/update_project_sharing", params=params).json()
+    resp = safe_get_request(url=f"{URL}/update_project_sharing", params=params)
     return resp[SUCCESS_FIELD], resp[MSG_FIELD]
