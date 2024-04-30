@@ -3,7 +3,7 @@ from flet_core import border_radius, border
 
 import call_endpoints
 from app_layout import AppLayout
-from appproject import AppProject
+from app_project import AppProject
 from data_store import DataStore
 from flet import (
     AlertDialog,
@@ -15,7 +15,6 @@ from flet import (
     Page,
     PopupMenuButton,
     PopupMenuItem,
-    RoundedRectangleBorder,
     Row,
     TemplateRoute,
     Text,
@@ -41,7 +40,7 @@ class ClientApp(UserControl):
         self.own_projects_store: DataStore = store_own
         self.shared_projects_store: DataStore = store_shared
         self.page.on_route_change = self.route_change
-        self.boards = self.own_projects_store.get_projects()
+        self.projects = self.own_projects_store.get_projects()
         self.user = ""
         self.login_profile_button = PopupMenuItem(text="Log in", on_click=self.login_popup)
         self.sign_up_button = PopupMenuItem(text="Sign up", on_click=self.sign_up)
@@ -98,9 +97,7 @@ class ClientApp(UserControl):
             call_endpoints.logout(call_endpoints.get_cached_session_id())
         except:
             pass
-        # create an initial board for demonstration if no boards
-        # if len(self.boards) == 0:
-        #     self.create_new_board("My First Board")
+
         self.page.go("/")
 
     def sign_up(self, e):
@@ -277,7 +274,7 @@ class ClientApp(UserControl):
         troute = TemplateRoute(self.page.route)
         if troute.match("/"):
             self.page.go("/Projects")
-        elif troute.match("/board/:id"):
+        elif troute.match("/project/:id"):
             if int(troute.id) > len(self.own_projects_store.get_projects()) + \
                                 len(self.shared_projects_store.get_projects()):
                 self.page.go("/")

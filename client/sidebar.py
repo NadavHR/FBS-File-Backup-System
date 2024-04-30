@@ -107,8 +107,8 @@ class Sidebar(UserControl):
                         hint_text=b.name,
                         text_size=12,
                         read_only=True,
-                        on_focus=self.board_name_focus,
-                        on_blur=self.board_name_blur,
+                        on_focus=self.project_name_focus,
+                        on_blur=self.project_name_blur,
                         border="none",
                         height=50,
                         width=150,
@@ -132,8 +132,8 @@ class Sidebar(UserControl):
                         hint_text=b.name,
                         text_size=12,
                         read_only=True,
-                        on_focus=self.board_name_focus,
-                        on_blur=self.board_name_blur,
+                        on_focus=self.project_name_focus,
+                        on_blur=self.project_name_blur,
                         border="none",
                         height=50,
                         width=150,
@@ -152,13 +152,13 @@ class Sidebar(UserControl):
         self.view.update()
         self.page.update()
 
-    def board_name_focus(self, e):
+    def project_name_focus(self, e):
         pass
         e.control.read_only = True
         # e.control.border = "outline"
         # e.control.update()
 
-    def board_name_blur(self, e):
+    def project_name_blur(self, e):
         pass
         # self.store_own.update_project(self.store_own.get_projects()[e.control.data], {
         #     'name': e.control.value})
@@ -182,6 +182,6 @@ class Sidebar(UserControl):
         index = e if (type(e) == int) else e.control.selected_index
         self.top_nav_rail.selected_index = None
         self.bottom_nav_rail.selected_index = index
-        self.page.route = f"/board/{index}"
+        self.page.route = f"/project/{index}"
         self.view.update()
         self.page.update()
