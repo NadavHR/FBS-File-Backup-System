@@ -9,7 +9,7 @@ from project_class import Project
 from commit import Commit
 
 
-class TestProjectCreation(unittest.TestCase):
+class TestProjectSharing(unittest.TestCase):
     def test_bad_project(self):
         self.assertEqual(
             ProjectManager.update_project_permissions("test_user", Project("bad_user", "i shouldn't exist"),

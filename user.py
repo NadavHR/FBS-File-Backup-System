@@ -12,6 +12,8 @@ class User(constants.Constants):
     def __init__(self, user_name: str, password_hash: bytes, session: Session = None):
         self.user_name = user_name
         self.password_hash = password_hash
+        if not (os.path.exists(User.USERS_DIR)):
+            os.makedirs(User.USERS_DIR)
         if not (session is None):
             if session.get_session_user() == user_name:
                 if user_name in users_to_sessions:

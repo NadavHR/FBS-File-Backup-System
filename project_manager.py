@@ -219,7 +219,7 @@ class ProjectManager(constants.Constants):
     @staticmethod
     def delete_commit(commit: Commit):
         """
-        deletes a commit, ONLY USE IF THE UER ASKING FOR DELETION IS THE OWNER
+        deletes a commit, ONLY USE IF THE USER ASKING FOR DELETION IS THE OWNER
         :param commit: the commit to delete
         :return: a Response object with the fitting response
         """

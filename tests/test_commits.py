@@ -7,7 +7,7 @@ from commit import Commit
 from project_class import Project
 from user_manager import UserManager
 
-# TODO: finish writing this test
+
 class TestCommits(unittest.TestCase):
     def test_bad_user(self):
         project = Project("test_user", "test_project")
