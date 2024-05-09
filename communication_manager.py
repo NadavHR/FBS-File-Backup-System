@@ -2,6 +2,7 @@ import base64
 import hashlib
 import json
 import getpass
+import os
 import socket
 
 import uvicorn
@@ -135,17 +136,25 @@ def update_project_sharing(session_id: int, project_name: str, user_name: str, w
 
 def main():
     conf = zeroconf.Zeroconf(ip_version=zeroconf.IPVersion.All)
+    server_address = socket.gethostbyname(socket.gethostname())
     info = zeroconf.ServiceInfo(
-        "_http._tcp.local.",
-        "FBS-server._http._tcp.local.",
+        "_https._tcp.local.",
+        "FBS-server._https._tcp.local.",
         port=constants.Constants.COMMUNICATION_PORT,
-        addresses=[socket.inet_aton(socket.gethostbyname(socket.gethostname()))],
-        server="FBS-server.local."
+        addresses=[socket.inet_aton(server_address)],
+        server="FBS-server.local.",
         )
     conf.unregister_all_services()
     conf.register_service(info)
 
-    uvicorn.run(app, host="0.0.0.0", port=constants.Constants.COMMUNICATION_PORT)
+    os.system("mkcert -install")
+    os.system(f"mkcert localhost FBS-server.local {server_address} ::1")
+    uvicorn.run(app,
+                host="0.0.0.0",
+                port=constants.Constants.COMMUNICATION_PORT,
+                ssl_certfile=constants.Constants.CERT_FILE,
+                ssl_keyfile=constants.Constants.KEY_FILE
+    )
 
 
 if __name__ == '__main__':
