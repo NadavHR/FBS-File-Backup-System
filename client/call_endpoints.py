@@ -5,7 +5,7 @@ import app_consts
 import requests
 import file_utils
 
-URL = f"http://{socket.gethostbyname('FBS-server.local')}:80"
+URL = f"https://{socket.gethostbyname('fbs-server.local')}:80"
 SUCCESS_FIELD = "success"
 MSG_FIELD = "message"
 
@@ -61,7 +61,7 @@ def safe_get_request(url: str, params: dict) -> dict[str: bool, str: str]:
     :return: a dict with success and message detailing the requests success
     """
     try:
-        resp = requests.get(url=url, params=params).json()
+        resp = requests.get(url=url, params=params, verify=False).json()
         return resp
     except:
         return {SUCCESS_FIELD: False, MSG_FIELD: "bad request"}
@@ -152,7 +152,7 @@ def get_commit_info(session_id: int, project_name: str, project_owner: str, comm
 def get_commit_data(session_id: int, project_name: str, project_owner: str, commit_id: int, path: str) -> (
 bool, bool or str):
     """
-    gets the info on a certain commit
+    gets the data of a certain commit
     :param path: path to save the data to
     :param session_id: id of the session
     :param project_name: the name of the project
@@ -198,7 +198,7 @@ def commit(session_id: int, project_name: str, project_owner: str, commit_name: 
             if size >= app_consts.COMMIT_SIZE_LIMIT:
                 return False, "Folder Size too big"
 
-    resp = requests.post(url=f"{URL}/commit", params=params,
+    resp = requests.post(url=f"{URL}/commit", params=params, verify=False,
                          json={COMMIT_DATA_FIELD: encode(file_utils.compress_and_encode(path_to_data))}).json()
     return resp[SUCCESS_FIELD], resp[MSG_FIELD]
 

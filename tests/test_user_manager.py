@@ -131,6 +131,5 @@ class TestUserManager(unittest.TestCase):
         self.assertEqual(json.loads(r.response_message)[Project.PROJECT_DESCRIPTION_FIELD], "hi")
 
 
-
 if __name__ == '__main__':
     unittest.main()

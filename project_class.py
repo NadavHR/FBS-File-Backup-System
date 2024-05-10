@@ -3,6 +3,8 @@ import json
 import os
 import shutil
 
+import rsa
+
 import constants
 
 
@@ -142,6 +144,13 @@ class Project(constants.Constants):
         """
         if not self.exists():
             return False
+        with open(Project.PUBLIC_KEY_FILE, "rb") as file:
+            pub_key = rsa.PublicKey.load_pkcs1(file.read())
+        result = []
+        for n in range(0, len(data), Project.ENCRYPTION_CHUNK_SIZE):
+            part = data[n:n + Project.ENCRYPTION_CHUNK_SIZE]
+            result.append(rsa.encrypt(part, pub_key))
+        data = b''.join(result)
 
         latest = self.path_to_latest_commit()
         num_file_path = f"{latest}\\{Project.COMMIT_NUMBER_FILE}"
