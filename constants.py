@@ -92,5 +92,13 @@ class Constants:
 
     COMMUNICATION_PORT = 80
 
+    # certificate and key for ssl
     CERT_FILE = "./localhost+3.pem"
     KEY_FILE = "./localhost+3-key.pem"
+
+    # private and public keys for encryption of the data base
+    PUBLIC_KEY_FILE = "public.txt"
+    PRIVATE_KEY_FILE = "private.txt"
+    KEY_SIZE = 2048  # key size for rsa encryption
+    ENCRYPTION_CHUNK_SIZE = 245
+    DECRYPTION_CHUNK_SIZE = 256

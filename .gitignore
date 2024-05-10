@@ -7,3 +7,5 @@ __pycache__/*
 */session_id_cache.txt
 localhost+3-key.pem
 localhost+3.pem
+private.txt
+public.txt

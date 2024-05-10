@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import shutil
 import unittest
 import client.file_utils as file_utils
 import client.call_endpoints as endpoints
@@ -92,15 +93,19 @@ class MyTestCase(unittest.TestCase):
         _, session_id_2 = endpoints.sign_up(user_2, password)
         ok, message = endpoints.update_project_sharing(session_id, project_name, user_2, True)
         self.assertTrue(ok)
-        
+
         # test commit + permissions
+        save_path = "../tests/data_save_test/"
+        folder_name = "compression_test/"
+        original_path = f"../tests/{folder_name}"
+
         ok, message = endpoints.commit(session_id_2, project_name, user_name, "new commit", "new commit",
-                                       "tests/compression_test")
+                                       original_path)
         self.assertTrue(ok)
         ok, message = endpoints.update_project_sharing(session_id, project_name, user_2, False)
         self.assertTrue(ok)
         ok, message = endpoints.commit(session_id_2, project_name, user_name, "new commit", "new commit",
-                                       "tests/compression_test")
+                                       original_path)
         self.assertFalse(ok)
 
         # test get commit info + permissions
@@ -113,9 +118,19 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(ok)
 
         # test get commit data
-        ok, success = endpoints.get_commit_data(session_id, project_name, user_name, 0, "tests/data_save_test")
+        ok, success = endpoints.get_commit_data(session_id, project_name, user_name, 0, save_path)
         self.assertTrue(ok and success)
-        ok, message = endpoints.get_commit_data(session_id, project_name, user_name, 100, "tests/data_save_test")
+        files = os.listdir(original_path)
+        for file in files:
+            f = open(f"{save_path}{folder_name}{file}", "rb")
+            s_decoded = f.read()
+            f.close()
+            f = open(f"{original_path}{file}", "rb")
+            s_original = f.read()
+            f.close()
+            self.assertEqual(s_original, s_decoded)
+
+        ok, message = endpoints.get_commit_data(session_id, project_name, user_name, 100, save_path)
         self.assertFalse(ok)
 
         # test delete commit
@@ -130,8 +145,9 @@ class MyTestCase(unittest.TestCase):
         ok, message = endpoints.delete_user(session_id_2)
         self.assertFalse(ok)
 
-
-
+        endpoints.logout(session_id)
+        endpoints.logout(session_id_2)
+        shutil.rmtree(save_path)
 
 
 if __name__ == '__main__':
@@ -139,4 +155,3 @@ if __name__ == '__main__':
     # proc.start()
     unittest.main()
     # proc.terminate()
-

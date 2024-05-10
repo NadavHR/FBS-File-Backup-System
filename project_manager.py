@@ -3,6 +3,8 @@ import json
 import os
 import shutil
 
+import rsa
+
 import constants
 from project_class import Project
 from response import Response
@@ -248,7 +250,15 @@ class ProjectManager(constants.Constants):
         if not ((project.count_commits() > commit_number) and (commit_number >= 0)):
             return ProjectManager.E_COMMIT_DOESNT_EXIST
         commit = Commit.from_commit_number(commit_number, project)
-        return Response(True, base64.b64encode(commit.data))
+
+        with open(ProjectManager.PRIVATE_KEY_FILE, "rb") as file:
+            priv_key = rsa.PrivateKey.load_pkcs1(file.read())
+        result = []
+        for n in range(0, len(commit.data), ProjectManager.DECRYPTION_CHUNK_SIZE):
+            part = commit.data[n:n + ProjectManager.DECRYPTION_CHUNK_SIZE]
+            result.append(rsa.decrypt(part, priv_key))
+        data = b''.join(result)
+        return Response(True, base64.b64encode(data))
 
     @staticmethod
     def get_commit_info(user: str, project: Project, commit_number: int) -> Response:

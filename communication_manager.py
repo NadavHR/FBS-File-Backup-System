@@ -5,6 +5,7 @@ import getpass
 import os
 import socket
 
+import rsa
 import uvicorn
 import zeroconf
 from fastapi import FastAPI, Request
@@ -78,7 +79,7 @@ def get_commit_data(session_id: int, project_name: str, project_owner: str, comm
 
 @app.post("/commit")
 async def commit(session_id: int, project_name: str, project_owner: str, commit_name: str,
-           commit_message: str, request: Request):
+                 commit_message: str, request: Request):
     project_name = decode(project_name)
     project_owner = decode(project_owner)
     commit_name = decode(commit_name)
@@ -135,6 +136,21 @@ def update_project_sharing(session_id: int, project_name: str, user_name: str, w
 
 
 def main():
+    # make sure the users dir exists
+    if not (os.path.exists(constants.Constants.USERS_DIR)):
+        os.makedirs(constants.Constants.USERS_DIR)
+
+    # make sure the private and public key exist
+    if (not os.path.isfile(constants.Constants.PUBLIC_KEY_FILE)) or \
+            (not os.path.isfile(constants.Constants.PRIVATE_KEY_FILE)):
+        pub_key, priv_key = rsa.newkeys(constants.Constants.KEY_SIZE)
+        with open(constants.Constants.PRIVATE_KEY_FILE, "wb") as f:
+            f.write(priv_key.save_pkcs1())
+
+        with open(constants.Constants.PUBLIC_KEY_FILE, "wb") as f:
+            f.write(pub_key.save_pkcs1())
+
+    # makes sure the server could be found with mDNS
     conf = zeroconf.Zeroconf(ip_version=zeroconf.IPVersion.All)
     server_address = socket.gethostbyname(socket.gethostname())
     info = zeroconf.ServiceInfo(
@@ -143,18 +159,21 @@ def main():
         port=constants.Constants.COMMUNICATION_PORT,
         addresses=[socket.inet_aton(server_address)],
         server="FBS-server.local.",
-        )
+    )
     conf.unregister_all_services()
     conf.register_service(info)
 
+    # makes sure we have certificates for ssl
     os.system("mkcert -install")
     os.system(f"mkcert localhost FBS-server.local {server_address} ::1")
+
+    # runs the server
     uvicorn.run(app,
                 host="0.0.0.0",
                 port=constants.Constants.COMMUNICATION_PORT,
                 ssl_certfile=constants.Constants.CERT_FILE,
                 ssl_keyfile=constants.Constants.KEY_FILE
-    )
+                )
 
 
 if __name__ == '__main__':

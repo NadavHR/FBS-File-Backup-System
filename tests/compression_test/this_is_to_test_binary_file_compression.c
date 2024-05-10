@@ -5,6 +5,6 @@
 
 int main(int argc, char const *argv[])
 {
-    printf("if this is printed, the compression and decompression was successfull");
+    printf("if this is printed, the compression and decompression was successful");
     return 0;
 }
